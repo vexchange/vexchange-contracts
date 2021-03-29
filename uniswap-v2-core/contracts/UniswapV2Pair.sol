@@ -13,11 +13,14 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
     using UQ112x112 for uint224;
 
     uint public constant MINIMUM_LIQUIDITY = 10**3;
-    uint public constant MIN_LP_FEE = 100;   // 1%
-    uint public constant MAX_LP_FEE = 2;     // 50%
-    uint public constant MIN_SWAP_FEE = 1;   // 0.01%
-    uint public constant MAX_SWAP_FEE = 200; // 2.00%
     bytes4 private constant SELECTOR = bytes4(keccak256(bytes('transfer(address,uint256)')));
+
+    uint public constant MAX_PLATFORM_FEE = 5000;   // 50.00%
+    uint public constant MIN_SWAP_FEE     = 5;      //  0.01%
+    uint public constant MAX_SWAP_FEE     = 200;    //  2.00%
+
+    uint public swapFee;
+    uint public platformFee;
 
     address public factory;
     address public token0;
@@ -31,9 +34,6 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
     uint public price1CumulativeLast;
     uint public kLast; // reserve0 * reserve1, as of immediately after the most recent liquidity event
 
-    uint public swapFee;
-    uint public lpFee;
-
     uint private unlocked = 1;
     modifier lock() {
         require(unlocked == 1, 'UniswapV2: LOCKED');
@@ -43,14 +43,16 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
     }
 
     // TODO: Needs onlyFactory / onlyOnwer modifier
-    function setLpFee(uint _lpFee) external {
-        require(_lpFee < MIN_LP_FEE && _lpFee > MAX_LP_FEE);
-        lpFee = _lpFee;
+    function setLpFee(uint _platformFee) external {
+        require(_platformFee < MAX_PLATFORM_FEE);
+
+        platformFee = _platformFee;
     }
 
     // TODO: Needs onlyFactory / onlyOnwer modifier
     function setSwapFee(uint _swapFee) external {
-        require(_swapFee > MIN_LP_FEE && _swapFee < MAX_SWAP_FEE);
+        require(_swapFee > MIN_PLATFORM_FEE && _swapFee < MAX_SWAP_FEE);
+
         swapFee = _swapFee;
     }
 
@@ -106,16 +108,16 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
 
     // if fee is on, mint liquidity equivalent to 1/6th of the growth in sqrt(k)
     function _mintFee(uint112 _reserve0, uint112 _reserve1) private returns (bool feeOn) {
-        address feeTo = IUniswapV2Factory(factory).feeTo();
-        feeOn = feeTo != address(0);
+        feeOn = platformFee > 0;
         uint _kLast = kLast; // gas savings
         if (feeOn) {
             if (_kLast != 0) {
+                address feeTo = IUniswapV2Factory(factory).feeTo();
                 uint rootK = Math.sqrt(uint(_reserve0).mul(_reserve1));
                 uint rootKLast = Math.sqrt(_kLast);
                 if (rootK > rootKLast) {
                     uint numerator = totalSupply.mul(rootK.sub(rootKLast));
-                    uint denominator = rootK.mul(lpFee).add(rootKLast);
+                    uint denominator = rootK.mul(platformFee).add(rootKLast);
                     uint liquidity = numerator / denominator;
                     if (liquidity > 0) _mint(feeTo, liquidity);
                 }
