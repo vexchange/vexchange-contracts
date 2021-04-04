@@ -13,6 +13,7 @@ contract UniswapV2Factory is IUniswapV2Factory, Ownable {
     uint public defaultSwapFee;
     uint public defaultPlatformFee;
     address public defaultRecoverer;
+
     address public feeTo;
 
     mapping(address => mapping(address => address)) public getPair;

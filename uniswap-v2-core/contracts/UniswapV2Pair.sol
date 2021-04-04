@@ -53,8 +53,6 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
     }
 
     function setRecoverer(address _recoverer) external onlyFactory {
-        require(_recoverer != address(0), "Vexchange: INVALID_RECOVERER");
-
         recoverer = _recoverer;
     }
 
@@ -223,7 +221,7 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         uint amount1In = balance1 > _reserve1 - amount1Out ? balance1 - (_reserve1 - amount1Out) : 0;
         require(amount0In > 0 || amount1In > 0, 'UniswapV2: INSUFFICIENT_INPUT_AMOUNT');
         { // scope for reserve{0,1}Adjusted, avoids stack too deep errors
-        // TODO: Check if 1000 -> 10,000 introduces overflow possibility
+        // TODO: Check if 1,000 -> 10,000 introduces overflow possibility
         uint balance0Adjusted = balance0.mul(10000).sub(amount0In.mul(swapFee));
         uint balance1Adjusted = balance1.mul(10000).sub(amount1In.mul(swapFee));
         require(balance0Adjusted.mul(balance1Adjusted) >= uint(_reserve0).mul(_reserve1).mul(10000**2), 'UniswapV2: K');
@@ -244,7 +242,7 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
     function recoverToken(address token) external {
         require(token != token0, "Vexchange: INVALID_TOKEN_TO_RECOVER");
         require(token != token1, "Vexchange: INVALID_TOKEN_TO_RECOVER");
-        require(recoverer != address(0));
+        require(recoverer != address(0), "Vexchange: RECOVERER_ZERO_ADDRESS");
         
         uint _amountToRecover = IERC20(token).balanceOf(address(this));
 
