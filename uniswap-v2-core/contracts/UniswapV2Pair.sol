@@ -2,11 +2,12 @@ pragma solidity =0.5.16;
 
 import './interfaces/IUniswapV2Pair.sol';
 import './UniswapV2ERC20.sol';
-import './libraries/Math.sol';
-import './libraries/UQ112x112.sol';
-import './interfaces/IERC20.sol';
 import './interfaces/IUniswapV2Factory.sol';
 import './interfaces/IUniswapV2Callee.sol';
+import './libraries/Math.sol';
+import './interfaces/IERC20.sol';
+import './libraries/UQ112x112.sol';
+
 
 contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
     using SafeMath  for uint;
@@ -14,14 +15,18 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
 
     uint public constant MINIMUM_LIQUIDITY = 10**3;
     bytes4 private constant SELECTOR = bytes4(keccak256(bytes('transfer(address,uint256)')));
+    uint256 public constant SQUARED_ACCURACY = 100_000_000_000_000_000_000_000_000_000_000_000_000; // 100000000000000000000000000000000000000
+    uint256 public constant ACCURACY         = 10_000_000_000_000_000_000;                          // 10000000000000000000
+    uint16  public constant FEE_ACCURACY     = 10_000;
 
     uint public constant MAX_PLATFORM_FEE = 5000;   // 50.00%
-    uint public constant MIN_SWAP_FEE     = 5;      //  0.01%
+    uint public constant MIN_SWAP_FEE     = 5;      //  0.05%
     uint public constant MAX_SWAP_FEE     = 200;    //  2.00%
 
     uint public swapFee;
     uint public platformFee;
 
+    address public recoverer;
     address public factory;
     address public token0;
     address public token1;
@@ -42,16 +47,25 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         unlocked = 1;
     }
 
-    // TODO: Needs onlyFactory / onlyOnwer modifier
-    function setLpFee(uint _platformFee) external {
+    modifier onlyFactory() {
+        require(msg.sender == factory, 'UniswapV2: FORBIDDEN');
+        _;
+    }
+
+    function setRecoverer(address _recoverer) external onlyFactory {
+        require(_recoverer != address(0));
+
+        recoverer = _recoverer;
+    }
+
+    function setLpFee(uint _platformFee) external onlyFactory {
         require(_platformFee < MAX_PLATFORM_FEE);
 
         platformFee = _platformFee;
     }
 
-    // TODO: Needs onlyFactory / onlyOnwer modifier
-    function setSwapFee(uint _swapFee) external {
-        require(_swapFee > MIN_PLATFORM_FEE && _swapFee < MAX_SWAP_FEE);
+    function setSwapFee(uint _swapFee) external onlyFactory {
+        require(_swapFee > MIN_SWAP_FEE && _swapFee < MAX_SWAP_FEE);
 
         swapFee = _swapFee;
     }
@@ -106,20 +120,31 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         emit Sync(reserve0, reserve1);
     }
 
-    // if fee is on, mint liquidity equivalent to 1/6th of the growth in sqrt(k)
+    function _calcFee(uint _sqrtNewK, uint _sqrtOldK, uint _platformFee, uint _circulatingShares) internal pure returns (uint _sharesToIssue) {
+        // Assert newK & oldK        < uint112
+        // Assert _circulatingShares < FEE_ACCURACY
+        // Assert _circulatingShares < uint112
+
+        uint256 _scaledGrowth = (_sqrtNewK * ACCURACY) / _sqrtOldK;                         // ASSERT: < UINT256
+        uint256 _scaledMultiplier = ACCURACY - (SQUARED_ACCURACY / _scaledGrowth);          // ASSERT: < UINT128
+        uint256 _scaledTargetOwnership = _scaledMultiplier * _platformFee / FEE_ACCURACY;   // ASSERT: < UINT144 during maths, ends < UINT128
+
+        _sharesToIssue = _scaledTargetOwnership.mul(_circulatingShares) / (ACCURACY.sub(_scaledTargetOwnership)); // ASSER: _scaledTargetOwnership < ACCURACY
+    }
+
     function _mintFee(uint112 _reserve0, uint112 _reserve1) private returns (bool feeOn) {
         feeOn = platformFee > 0;
-        uint _kLast = kLast; // gas savings
+        uint _kLast = kLast;
+
         if (feeOn) {
-            if (_kLast != 0) {
-                address feeTo = IUniswapV2Factory(factory).feeTo();
-                uint rootK = Math.sqrt(uint(_reserve0).mul(_reserve1));
-                uint rootKLast = Math.sqrt(_kLast);
-                if (rootK > rootKLast) {
-                    uint numerator = totalSupply.mul(rootK.sub(rootKLast));
-                    uint denominator = rootK.mul(platformFee).add(rootKLast);
-                    uint liquidity = numerator / denominator;
-                    if (liquidity > 0) _mint(feeTo, liquidity);
+            address feeTo = IUniswapV2Factory(factory).feeTo();
+            uint _sqrtNewK = Math.sqrt(uint(_reserve0).mul(_reserve1));
+            uint _sqrtOldK = Math.sqrt(kLast); // gas savings
+        
+            if (_sqrtOldK != 0){
+                if (_sqrtNewK > _sqrtOldK) {
+                    uint _sharesToIssue = _calcFee(_sqrtNewK, _sqrtOldK, platformFee, totalSupply);
+                    if (_sharesToIssue > 0) _mint(feeTo, _sharesToIssue);
                 }
             }
         } else if (_kLast != 0) {
@@ -214,6 +239,15 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         address _token1 = token1; // gas savings
         _safeTransfer(_token0, to, IERC20(_token0).balanceOf(address(this)).sub(reserve0));
         _safeTransfer(_token1, to, IERC20(_token1).balanceOf(address(this)).sub(reserve1));
+    }
+    
+    function recoverToken(address token) external {
+        require(token != token0, "UniswapV2: INVALID_TOKEN_TO_RECOVER");
+        require(token != token1, "UniswapV2: INVALID_TOKEN_TO_RECOVER");
+        
+        uint _amountToRecover = IERC20(token).balanceOf(address(this));
+
+        _safeTransfer(token, recoverer, _amountToRecover);
     }
 
     // force reserves to match balances
