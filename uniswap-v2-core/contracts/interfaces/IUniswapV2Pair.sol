@@ -33,6 +33,15 @@ interface IUniswapV2Pair {
     );
     event Sync(uint112 reserve0, uint112 reserve1);
 
+    function MAX_PLATFORM_FEE() external view returns(uint);
+    function MIN_SWAP_FEE() external view returns(uint);
+    function MAX_SWAP_FEE() external view returns(uint);
+
+    function swapFee() external view returns(uint);
+    function platformFee() external view returns(uint);
+
+    function recoverer() external view returns (address);
+
     function MINIMUM_LIQUIDITY() external pure returns (uint);
     function factory() external view returns (address);
     function token0() external view returns (address);

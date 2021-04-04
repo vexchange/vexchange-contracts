@@ -17,7 +17,7 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
     bytes4 private constant SELECTOR = bytes4(keccak256(bytes('transfer(address,uint256)')));
     uint256 public constant SQUARED_ACCURACY = 100_000_000_000_000_000_000_000_000_000_000_000_000; // 100000000000000000000000000000000000000
     uint256 public constant ACCURACY         = 10_000_000_000_000_000_000;                          // 10000000000000000000
-    uint16  public constant FEE_ACCURACY     = 10_000;
+    uint256 public constant FEE_ACCURACY     = 10_000;
 
     uint public constant MAX_PLATFORM_FEE = 5000;   // 50.00%
     uint public constant MIN_SWAP_FEE     = 5;      //  0.05%

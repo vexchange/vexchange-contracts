@@ -5,7 +5,6 @@ import './UniswapV2Pair.sol';
 import './libraries/Ownable.sol';
 
 contract UniswapV2Factory is IUniswapV2Factory, Ownable {
-    
     uint public constant MAX_PLATFORM_FEE = 5000;   // 50.00%
     uint public constant MIN_SWAP_FEE     = 5;      //  0.05%
     uint public constant MAX_SWAP_FEE     = 200;    //  2.00%
