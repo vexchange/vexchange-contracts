@@ -48,24 +48,24 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
     }
 
     modifier onlyFactory() {
-        require(msg.sender == factory, 'UniswapV2: FORBIDDEN');
+        require(msg.sender == factory, 'Vexchange: FORBIDDEN');
         _;
     }
 
     function setRecoverer(address _recoverer) external onlyFactory {
-        require(_recoverer != address(0));
+        require(_recoverer != address(0), "Vexchange: INVALID_RECOVERER");
 
         recoverer = _recoverer;
     }
 
-    function setLpFee(uint _platformFee) external onlyFactory {
-        require(_platformFee < MAX_PLATFORM_FEE);
+    function setPlatformFee(uint _platformFee) external onlyFactory {
+        require(_platformFee < MAX_PLATFORM_FEE, "Vexchange: INVALID_PLATFORM_FEE");
 
         platformFee = _platformFee;
     }
 
     function setSwapFee(uint _swapFee) external onlyFactory {
-        require(_swapFee > MIN_SWAP_FEE && _swapFee < MAX_SWAP_FEE);
+        require(_swapFee > MIN_SWAP_FEE && _swapFee < MAX_SWAP_FEE, "Vexchange: INVALID_SWAP_FEE");
 
         swapFee = _swapFee;
     }
@@ -242,8 +242,9 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
     }
     
     function recoverToken(address token) external {
-        require(token != token0, "UniswapV2: INVALID_TOKEN_TO_RECOVER");
-        require(token != token1, "UniswapV2: INVALID_TOKEN_TO_RECOVER");
+        require(token != token0, "Vexchange: INVALID_TOKEN_TO_RECOVER");
+        require(token != token1, "Vexchange: INVALID_TOKEN_TO_RECOVER");
+        require(recoverer != address(0));
         
         uint _amountToRecover = IERC20(token).balanceOf(address(this));
 

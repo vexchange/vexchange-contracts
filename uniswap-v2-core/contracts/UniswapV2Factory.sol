@@ -2,18 +2,28 @@ pragma solidity =0.5.16;
 
 import './interfaces/IUniswapV2Factory.sol';
 import './UniswapV2Pair.sol';
+import './libraries/Ownable.sol';
 
-contract UniswapV2Factory is IUniswapV2Factory {
+contract UniswapV2Factory is IUniswapV2Factory, Ownable {
+    
+    uint public constant MAX_PLATFORM_FEE = 5000;   // 50.00%
+    uint public constant MIN_SWAP_FEE     = 5;      //  0.05%
+    uint public constant MAX_SWAP_FEE     = 200;    //  2.00%
+
+    uint public defaultSwapFee;
+    uint public defaultPlatformFee;
+    address public defaultRecoverer;
     address public feeTo;
-    address public feeToSetter;
 
     mapping(address => mapping(address => address)) public getPair;
     address[] public allPairs;
 
     event PairCreated(address indexed token0, address indexed token1, address pair, uint);
 
-    constructor(address _feeToSetter) public {
-        feeToSetter = _feeToSetter;
+    constructor(uint _defaultSwapFee, uint _defaultPlatformFee, address _defaultRecoverer) public {
+        defaultSwapFee = _defaultSwapFee;
+        defaultPlatformFee = _defaultPlatformFee;
+        defaultRecoverer = _defaultRecoverer;
     }
 
     function allPairsLength() external view returns (uint) {
@@ -37,13 +47,36 @@ contract UniswapV2Factory is IUniswapV2Factory {
         emit PairCreated(token0, token1, pair, allPairs.length);
     }
 
-    function setFeeTo(address _feeTo) external {
-        require(msg.sender == feeToSetter, 'UniswapV2: FORBIDDEN');
+    function setFeeTo(address _feeTo) external onlyOwner {
         feeTo = _feeTo;
     }
-
-    function setFeeToSetter(address _feeToSetter) external {
-        require(msg.sender == feeToSetter, 'UniswapV2: FORBIDDEN');
-        feeToSetter = _feeToSetter;
+    
+    function setDefaultSwapFee(uint _swapFee) external onlyOwner {
+        require(_swapFee < MAX_SWAP_FEE, "Vexchange: INVALID_SWAP_FEE");
+        require(_swapFee > MIN_SWAP_FEE, "Vexchange: INVALID_SWAP_FEE");
+        
+        defaultSwapFee = _swapFee;
+    }
+    
+    function setDefaultPlatformFee(uint _platformFee) external onlyOwner {
+        require(_platformFee < MAX_PLATFORM_FEE, "Vexchange: INVALID_PLATFORM_FEE");
+        
+        defaultPlatformFee = _platformFee;
+    }
+    
+    function setDefaultRecoverer(address _recoverer) external onlyOwner {
+        defaultRecoverer = _recoverer;
+    }
+    
+    function setSwapFeeForPair(address _pair, uint _swapFee) external onlyOwner {
+        IUniswapV2Pair(_pair).setSwapFee(_swapFee);
+    }
+    
+    function setPlatformFeeForPair(address _pair, uint _platformFee) external onlyOwner {
+        IUniswapV2Pair(_pair).setPlatformFee(_platformFee);
+    }
+    
+    function setRecovererForPair(address _pair, address _recoverer) external onlyOwner {
+        IUniswapV2Pair(_pair).setRecoverer(_recoverer);
     }
 }

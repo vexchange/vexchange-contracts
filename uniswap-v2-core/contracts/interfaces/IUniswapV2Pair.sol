@@ -47,6 +47,11 @@ interface IUniswapV2Pair {
     function swap(uint amount0Out, uint amount1Out, address to, bytes calldata data) external;
     function skim(address to) external;
     function sync() external;
+    function recoverToken(address token) external;
+    
+    function setRecoverer(address _recoverer) external;
+    function setPlatformFee(uint _platformFee) external;
+    function setSwapFee(uint _swapFee) external;
 
     function initialize(address, address) external;
 }
