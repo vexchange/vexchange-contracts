@@ -26,14 +26,22 @@ describe('UniswapV2Factory', () => {
   const loadFixture = createFixtureLoader(provider, [wallet, other])
 
   let factory: Contract
+  let expectedDefaultSwapFee: number
+  let expectedDefaultPlatformFee: number
+
   beforeEach(async () => {
     const fixture = await loadFixture(factoryFixture)
     factory = fixture.factory
+
+    expectedDefaultSwapFee = fixture.defaultSwapFee
+    expectedDefaultPlatformFee = fixture.defaultPlatformFee
   })
 
-  it('feeTo, feeToSetter, allPairsLength', async () => {
+  it('feeTo, defaultSwapFee, defaultPlatformFee, defaultRecoverer, allPairsLength', async () => {
     expect(await factory.feeTo()).to.eq(AddressZero)
-    expect(await factory.feeToSetter()).to.eq(wallet.address)
+    expect(await factory.defaultSwapFee()).to.eq(expectedDefaultSwapFee.toString());
+    expect(await factory.defaultPlatformFee()).to.eq(expectedDefaultPlatformFee.toString());
+    expect(await factory.defaultRecoverer()).to.eq(wallet.address);
     expect(await factory.allPairsLength()).to.eq(0)
   })
 
@@ -68,19 +76,14 @@ describe('UniswapV2Factory', () => {
   it('createPair:gas', async () => {
     const tx = await factory.createPair(...TEST_ADDRESSES)
     const receipt = await tx.wait()
-    expect(receipt.gasUsed).to.eq(2512920)
+
+    // Hard-coded gas cost based on be current extension
+    expect(receipt.gasUsed).to.eq(2910117)
   })
 
   it('setFeeTo', async () => {
-    await expect(factory.connect(other).setFeeTo(other.address)).to.be.revertedWith('UniswapV2: FORBIDDEN')
+    await expect(factory.connect(other).setFeeTo(other.address)).to.be.revertedWith('VexchangeV2: FORBIDDEN')
     await factory.setFeeTo(wallet.address)
     expect(await factory.feeTo()).to.eq(wallet.address)
-  })
-
-  it('setFeeToSetter', async () => {
-    await expect(factory.connect(other).setFeeToSetter(other.address)).to.be.revertedWith('UniswapV2: FORBIDDEN')
-    await factory.setFeeToSetter(other.address)
-    expect(await factory.feeToSetter()).to.eq(other.address)
-    await expect(factory.setFeeToSetter(wallet.address)).to.be.revertedWith('UniswapV2: FORBIDDEN')
   })
 })

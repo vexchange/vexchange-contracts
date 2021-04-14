@@ -25,7 +25,7 @@ contract Ownable {
      * @dev Throws if called by any account other than the owner.
      */
     modifier onlyOwner() {
-        require(owner() == msg.sender, "Ownable: caller is not the owner");
+        require(owner() == msg.sender, "VexchangeV2: FORBIDDEN");
         _;
     }
 
@@ -34,7 +34,7 @@ contract Ownable {
      * Can only be called by the current owner.
      */
     function transferOwnership(address newOwner) public onlyOwner {
-        require(newOwner != address(0), "Ownable: new owner is the zero address");
+        require(newOwner != address(0), "VexchangeV2: ZERO_ADDRESS");
         emit OwnershipTransferred(_owner, newOwner);
         _owner = newOwner;
     }

@@ -8,7 +8,6 @@ interface IUniswapV2Factory {
     function MAX_SWAP_FEE() external view returns (uint);
 
     function owner() external view returns (address);
-    function renounceOwnership() external;
     function transferOwnership(address newOwner) external;
 
     function defaultSwapFee() external view returns (uint);
@@ -24,5 +23,4 @@ interface IUniswapV2Factory {
     function createPair(address tokenA, address tokenB) external returns (address pair);
 
     function setFeeTo(address) external;
-    function setFeeToSetter(address) external;
 }
