@@ -39,7 +39,6 @@ interface IUniswapV2Pair {
 
     function swapFee() external view returns(uint);
     function platformFee() external view returns(uint);
-
     function recoverer() external view returns (address);
 
     function MINIMUM_LIQUIDITY() external pure returns (uint);
@@ -58,9 +57,9 @@ interface IUniswapV2Pair {
     function sync() external;
     function recoverToken(address token) external;
     
-    function setRecoverer(address _recoverer) external;
     function setPlatformFee(uint _platformFee) external;
     function setSwapFee(uint _swapFee) external;
+    function setRecoverer(address _recoverer) external;
 
     function initialize(address, address) external;
 }
