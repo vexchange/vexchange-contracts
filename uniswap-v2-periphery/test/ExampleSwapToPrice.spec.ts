@@ -17,7 +17,7 @@ const overrides = {
 
 describe('ExampleSwapToPrice', () => {
   const provider = new MockProvider({
-    hardfork: 'istanbul',
+    hardfork: 'constantinople',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
     gasLimit: 9999999
   })

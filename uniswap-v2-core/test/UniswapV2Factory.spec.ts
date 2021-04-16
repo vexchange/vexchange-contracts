@@ -18,7 +18,7 @@ const TEST_ADDRESSES: [string, string] = [
 
 describe('UniswapV2Factory', () => {
   const provider = new MockProvider({
-    hardfork: 'istanbul',
+    hardfork: 'constantinople',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
     gasLimit: 9999999
   })

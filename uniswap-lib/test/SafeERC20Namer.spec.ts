@@ -21,7 +21,7 @@ const fullBytes32Symbol = 'SYMB'.repeat(8).substr(0, 31)
 describe('SafeERC20Namer', () => {
   const provider = new MockProvider({
     ganacheOptions: {
-      hardfork: 'istanbul',
+      hardfork: 'constantinople',
       mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
       gasLimit: 9999999,
     },
