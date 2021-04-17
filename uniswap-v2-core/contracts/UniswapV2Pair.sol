@@ -129,11 +129,11 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         // Assert _platformFee       < FEE_ACCURACY
         // Assert _circulatingShares < uint112
 
-        uint256 _scaledGrowth = (_sqrtNewK * ACCURACY) / _sqrtOldK;                      // ASSERT: < UINT256
-        uint256 _scaledMultiplier = ACCURACY - (SQUARED_ACCURACY / _scaledGrowth);          // ASSERT: < UINT128
-        uint256 _scaledTargetOwnership = _scaledMultiplier * _platformFee / FEE_ACCURACY; // ASSERT: < UINT144 during maths, ends < UINT128
+        uint256 _scaledGrowth = _sqrtNewK.mul(ACCURACY) / _sqrtOldK;                         // ASSERT: < UINT256
+        uint256 _scaledMultiplier = ACCURACY.sub(SQUARED_ACCURACY / _scaledGrowth);          // ASSERT: < UINT128
+        uint256 _scaledTargetOwnership = _scaledMultiplier.mul(_platformFee) / FEE_ACCURACY; // ASSERT: < UINT144 during maths, ends < UINT128
 
-        _sharesToIssue = _scaledTargetOwnership.mul(_circulatingShares) / (ACCURACY.sub(_scaledTargetOwnership)); // ASSER: _scaledTargetOwnership < ACCURACY
+        _sharesToIssue = _scaledTargetOwnership.mul(_circulatingShares) / ACCURACY.sub(_scaledTargetOwnership); // ASSERT: _scaledTargetOwnership < ACCURACY
     }
 
     function _mintFee(uint112 _reserve0, uint112 _reserve1) private returns (bool feeOn) {
