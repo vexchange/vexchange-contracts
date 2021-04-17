@@ -52,33 +52,6 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         _;
     }
 
-    function setRecoverer(address _recoverer) external onlyFactory {
-        recoverer = _recoverer;
-    }
-
-    function setPlatformFee(uint _platformFee) external onlyFactory {
-        require(_platformFee < MAX_PLATFORM_FEE, "Vexchange: INVALID_PLATFORM_FEE");
-
-        platformFee = _platformFee;
-    }
-
-    function setSwapFee(uint _swapFee) external onlyFactory {
-        require(_swapFee > MIN_SWAP_FEE && _swapFee < MAX_SWAP_FEE, "Vexchange: INVALID_SWAP_FEE");
-
-        swapFee = _swapFee;
-    }
-
-    function getReserves() public view returns (uint112 _reserve0, uint112 _reserve1, uint32 _blockTimestampLast) {
-        _reserve0 = reserve0;
-        _reserve1 = reserve1;
-        _blockTimestampLast = blockTimestampLast;
-    }
-
-    function _safeTransfer(address token, address to, uint value) private {
-        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(SELECTOR, to, value));
-        require(success && (data.length == 0 || abi.decode(data, (bool))), 'UniswapV2: TRANSFER_FAILED');
-    }
-
     event Mint(address indexed sender, uint amount0, uint amount1);
     event Burn(address indexed sender, uint amount0, uint amount1, address indexed to);
     event Swap(
@@ -90,9 +63,42 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         address indexed to
     );
     event Sync(uint112 reserve0, uint112 reserve1);
+    event SwapFeeChanged(uint oldSwapFee, uint newSwapFee);
+    event PlatformFeeChanged(uint oldPlatformFee, uint newPlatformFee);
+    event RecovererChanged(address oldRecoverer, address newRecoverer);
 
     constructor() public {
         factory = msg.sender;
+    }
+
+    function setSwapFee(uint _swapFee) external onlyFactory {
+        require(_swapFee > MIN_SWAP_FEE && _swapFee < MAX_SWAP_FEE, "Vexchange: INVALID_SWAP_FEE");
+
+        emit SwapFeeChanged(swapFee, _swapFee);
+        swapFee = _swapFee;
+    }
+
+    function setPlatformFee(uint _platformFee) external onlyFactory {
+        require(_platformFee < MAX_PLATFORM_FEE, "Vexchange: INVALID_PLATFORM_FEE");
+
+        emit PlatformFeeChanged(platformFee, _platformFee);
+        platformFee = _platformFee;
+    }
+
+    function setRecoverer(address _recoverer) external onlyFactory {
+        emit RecovererChanged(recoverer, _recoverer);
+        recoverer = _recoverer;
+    }
+
+    function getReserves() public view returns (uint112 _reserve0, uint112 _reserve1, uint32 _blockTimestampLast) {
+        _reserve0 = reserve0;
+        _reserve1 = reserve1;
+        _blockTimestampLast = blockTimestampLast;
+    }
+
+    function _safeTransfer(address token, address to, uint value) private {
+        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(SELECTOR, to, value));
+        require(success && (data.length == 0 || abi.decode(data, (bool))), 'UniswapV2: TRANSFER_FAILED');
     }
 
     // called once by the factory at time of deployment

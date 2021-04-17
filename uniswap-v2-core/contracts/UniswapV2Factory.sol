@@ -19,6 +19,10 @@ contract UniswapV2Factory is IUniswapV2Factory, Ownable {
     address[] public allPairs;
 
     event PairCreated(address indexed token0, address indexed token1, address pair, uint);
+    event FeeToChanged(address oldFeeTo, address newFeeTo);
+    event DefaultSwapFeeChanged(uint oldDefaultSwapFee, uint newDefaultSwapFee);
+    event DefaultPlatformFeeChanged(uint oldDefaultPlatformFee, uint newDefaultPlatformFee);
+    event DefaultRecovererChanged(address oldDefaultRecoverer, address newDefaultRecoverer);
 
     constructor(uint _defaultSwapFee, uint _defaultPlatformFee, address _defaultRecoverer) public {
         defaultSwapFee = _defaultSwapFee;
@@ -48,6 +52,7 @@ contract UniswapV2Factory is IUniswapV2Factory, Ownable {
     }
 
     function setFeeTo(address _feeTo) external onlyOwner {
+        emit FeeToChanged(feeTo, _feeTo);
         feeTo = _feeTo;
     }
     
@@ -55,16 +60,19 @@ contract UniswapV2Factory is IUniswapV2Factory, Ownable {
         require(_swapFee < MAX_SWAP_FEE, "Vexchange: INVALID_SWAP_FEE");
         require(_swapFee > MIN_SWAP_FEE, "Vexchange: INVALID_SWAP_FEE");
         
+        emit DefaultSwapFeeChanged(defaultSwapFee, _swapFee);
         defaultSwapFee = _swapFee;
     }
     
     function setDefaultPlatformFee(uint _platformFee) external onlyOwner {
         require(_platformFee < MAX_PLATFORM_FEE, "Vexchange: INVALID_PLATFORM_FEE");
         
+        emit DefaultPlatformFeeChanged(defaultPlatformFee, _platformFee);
         defaultPlatformFee = _platformFee;
     }
     
     function setDefaultRecoverer(address _recoverer) external onlyOwner {
+        emit DefaultRecovererChanged(defaultRecoverer, _recoverer);
         defaultRecoverer = _recoverer;
     }
     
