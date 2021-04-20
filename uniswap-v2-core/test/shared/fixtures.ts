@@ -20,10 +20,9 @@ const overrides = {
 }
 
 export async function factoryFixture(_: Web3Provider, [wallet]: Wallet[]): Promise<FactoryFixture> {
-  // Initial static default.
-  // TODO: it will be required to test over the full range most likely
-  const defaultSwapFee = 100
-  const defaultPlatformFee = 2500
+  // Initial static default - defaults to uniswap original fee structure with no feeTo set.
+  const defaultSwapFee = 30
+  const defaultPlatformFee = 0
 
   const factory = await deployContract(wallet, UniswapV2Factory, [defaultSwapFee, defaultPlatformFee, wallet.address], overrides)
   return { factory, defaultSwapFee, defaultPlatformFee }

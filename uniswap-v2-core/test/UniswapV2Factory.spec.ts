@@ -78,7 +78,7 @@ describe('UniswapV2Factory', () => {
     const receipt = await tx.wait()
 
     // Hard-coded gas cost based on be current extension
-    expect(receipt.gasUsed).to.eq(2910117)
+    expect(receipt.gasUsed).to.eq(3001519)
   })
 
   it('setFeeTo', async () => {

@@ -179,7 +179,7 @@ describe('UniswapV2Pair', () => {
     const receipt = await tx.wait()
 
     // Hard-coded gas cost based on current extension
-    expect(receipt.gasUsed).to.eq(75005)
+    expect(receipt.gasUsed).to.eq(67219)
   })
 
   it('burn', async () => {
@@ -221,9 +221,9 @@ describe('UniswapV2Pair', () => {
     await pair.sync(overrides)
 
     const initialPrice = encodePrice(token0Amount, token1Amount)
-    expect(await pair.price0CumulativeLast()).to.eq(initialPrice[0])
-    expect(await pair.price1CumulativeLast()).to.eq(initialPrice[1])
-    expect((await pair.getReserves())[2]).to.eq(blockTimestamp + 1)
+    expect(await pair.price0CumulativeLast(), "Initial price 0").to.eq(initialPrice[0])
+    expect(await pair.price1CumulativeLast(), "Initial price 1").to.eq(initialPrice[1])
+    expect((await pair.getReserves())[2], "Initial price timestamp").to.eq(blockTimestamp + 1)
 
     const swapAmount = expandTo18Decimals(3)
     await token0.transfer(pair.address, swapAmount)
@@ -231,20 +231,23 @@ describe('UniswapV2Pair', () => {
     // swap to a new price eagerly instead of syncing
     await pair.swap(0, expandTo18Decimals(1), wallet.address, '0x', overrides) // make the price nice
 
-    expect(await pair.price0CumulativeLast()).to.eq(initialPrice[0].mul(10))
-    expect(await pair.price1CumulativeLast()).to.eq(initialPrice[1].mul(10))
-    expect((await pair.getReserves())[2]).to.eq(blockTimestamp + 10)
+    expect(await pair.price0CumulativeLast(), "Price 0 post swap").to.eq(initialPrice[0].mul(10))
+    expect(await pair.price1CumulativeLast(), "Price 1 post swap").to.eq(initialPrice[1].mul(10))
+    expect((await pair.getReserves())[2], "Post swap timestamp").to.eq(blockTimestamp + 10)
 
     await mineBlock(provider, blockTimestamp + 20)
     await pair.sync(overrides)
 
     const newPrice = encodePrice(expandTo18Decimals(6), expandTo18Decimals(2))
-    expect(await pair.price0CumulativeLast()).to.eq(initialPrice[0].mul(10).add(newPrice[0].mul(10)))
-    expect(await pair.price1CumulativeLast()).to.eq(initialPrice[1].mul(10).add(newPrice[1].mul(10)))
-    expect((await pair.getReserves())[2]).to.eq(blockTimestamp + 20)
+    expect(await pair.price0CumulativeLast(), "Price 0 post sync").to.eq(initialPrice[0].mul(10).add(newPrice[0].mul(10)))
+    expect(await pair.price1CumulativeLast(), "Price 1 post sync").to.eq(initialPrice[1].mul(10).add(newPrice[1].mul(10)))
+    expect((await pair.getReserves())[2], "Price 0 post sync").to.eq(blockTimestamp + 20)
   })
 
   it('feeTo:off', async () => {
+    // Remove the platform fee (equiv to feeTo off)
+    await factory.setPlatformFeeForPair( pair.address, 0 );
+
     const token0Amount = expandTo18Decimals(1000)
     const token1Amount = expandTo18Decimals(1000)
     await addLiquidity(token0Amount, token1Amount)
