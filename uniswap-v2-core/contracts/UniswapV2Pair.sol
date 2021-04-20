@@ -102,10 +102,12 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
     }
 
     // called once by the factory at time of deployment
-    function initialize(address _token0, address _token1) external {
+    function initialize(address _token0, address _token1, uint _swapFee, uint _platformFee) external {
         require(msg.sender == factory, 'UniswapV2: FORBIDDEN'); // sufficient check
         token0 = _token0;
         token1 = _token1;
+        swapFee = _swapFee;
+        platformFee = _platformFee;
     }
 
     // update reserves and, on the first call per block, price accumulators
