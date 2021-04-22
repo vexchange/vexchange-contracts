@@ -32,6 +32,8 @@ interface IUniswapV2Pair {
         address indexed to
     );
     event Sync(uint112 reserve0, uint112 reserve1);
+    event SwapFeeChanged(uint oldSwapFee, uint newSwapFee);
+    event PlatformFeeChanged(uint oldPlatformFee, uint newPlatformFee);
 
     function MAX_PLATFORM_FEE() external view returns(uint);
     function MIN_SWAP_FEE() external view returns(uint);
@@ -57,8 +59,8 @@ interface IUniswapV2Pair {
     function sync() external;
     function recoverToken(address token) external;
     
-    function setPlatformFee(uint _platformFee) external;
     function setSwapFee(uint _swapFee) external;
+    function setPlatformFee(uint _platformFee) external;
     function setRecoverer(address _recoverer) external;
 
     function initialize(address _token0, address _token1, uint _swapFee, uint _platformFee) external;

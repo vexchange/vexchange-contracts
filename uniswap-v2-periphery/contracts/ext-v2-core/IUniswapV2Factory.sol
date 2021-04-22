@@ -2,6 +2,10 @@ pragma solidity >=0.5.0;
 
 interface IUniswapV2Factory {
     event PairCreated(address indexed token0, address indexed token1, address pair, uint);
+    event FeeToChanged(address oldFeeTo, address newFeeTo);
+    event DefaultSwapFeeChanged(uint oldDefaultSwapFee, uint newDefaultSwapFee);
+    event DefaultPlatformFeeChanged(uint oldDefaultPlatformFee, uint newDefaultPlatformFee);
+    event DefaultRecovererChanged(address oldDefaultRecoverer, address newDefaultRecoverer);
 
     function MAX_PLATFORM_FEE() external view returns (uint);
     function MIN_SWAP_FEE() external view returns (uint);
