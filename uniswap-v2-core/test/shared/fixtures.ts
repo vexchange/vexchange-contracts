@@ -20,7 +20,7 @@ const overrides = {
 }
 
 export async function factoryFixture(_: Web3Provider, [wallet]: Wallet[]): Promise<FactoryFixture> {
-  // Initial static default - defaults to uniswap original fee structure with no feeTo set.
+  // Initial static default - defaults to uniswap original fee structure with no 'feeTo' set.
   const defaultSwapFee = 30
   const defaultPlatformFee = 0
 

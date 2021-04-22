@@ -71,6 +71,11 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         factory = msg.sender;
     }
 
+    function platformFeeOn() external view returns (bool _platformFeeOn)
+    {
+        _platformFeeOn = platformFee > 0;
+    }
+
     function setSwapFee(uint _swapFee) external onlyFactory {
         require(_swapFee >= MIN_SWAP_FEE && _swapFee <= MAX_SWAP_FEE, "Vexchange: INVALID_SWAP_FEE");
 
@@ -143,14 +148,14 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         uint _kLast = kLast;
 
         if (feeOn) {
-            address feeTo = IUniswapV2Factory(factory).feeTo();
+            address platformFeeTo = IUniswapV2Factory(factory).platformFeeTo();
             uint _sqrtNewK = Math.sqrt(uint(_reserve0).mul(_reserve1));
             uint _sqrtOldK = Math.sqrt(kLast); // gas savings
         
             if (_sqrtOldK != 0){
                 if (_sqrtNewK > _sqrtOldK) {
                     uint _sharesToIssue = _calcFee(_sqrtNewK, _sqrtOldK, platformFee, totalSupply);
-                    if (_sharesToIssue > 0) _mint(feeTo, _sharesToIssue);
+                    if (_sharesToIssue > 0) _mint(platformFeeTo, _sharesToIssue);
                 }
             }
         } else if (_kLast != 0) {

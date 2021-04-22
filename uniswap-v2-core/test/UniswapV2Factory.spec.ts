@@ -37,8 +37,8 @@ describe('UniswapV2Factory', () => {
     expectedDefaultPlatformFee = fixture.defaultPlatformFee
   })
 
-  it('feeTo, defaultSwapFee, defaultPlatformFee, defaultRecoverer, allPairsLength', async () => {
-    expect(await factory.feeTo()).to.eq(AddressZero)
+  it('platformFeeTo, defaultSwapFee, defaultPlatformFee, defaultRecoverer, allPairsLength', async () => {
+    expect(await factory.platformFeeTo()).to.eq(AddressZero)
     expect(await factory.defaultSwapFee()).to.eq(expectedDefaultSwapFee.toString());
     expect(await factory.defaultPlatformFee()).to.eq(expectedDefaultPlatformFee.toString());
     expect(await factory.defaultRecoverer()).to.eq(wallet.address);
@@ -78,12 +78,12 @@ describe('UniswapV2Factory', () => {
     const receipt = await tx.wait()
 
     // Hard-coded gas cost based on current extension
-    expect(receipt.gasUsed).to.eq(2982319)
+    expect(receipt.gasUsed).to.eq(2987739)
   })
 
-  it('setFeeTo', async () => {
-    await expect(factory.connect(other).setFeeTo(other.address)).to.be.revertedWith('VexchangeV2: FORBIDDEN')
-    await factory.setFeeTo(wallet.address)
-    expect(await factory.feeTo()).to.eq(wallet.address)
+  it('setPlatformFeeTo', async () => {
+    await expect(factory.connect(other).setPlatformFeeTo(other.address)).to.be.revertedWith('VexchangeV2: FORBIDDEN')
+    await factory.setPlatformFeeTo(wallet.address)
+    expect(await factory.platformFeeTo()).to.eq(wallet.address)
   })
 })

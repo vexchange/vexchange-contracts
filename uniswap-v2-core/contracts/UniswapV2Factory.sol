@@ -13,13 +13,13 @@ contract UniswapV2Factory is IUniswapV2Factory, Ownable {
     uint public defaultPlatformFee;
     address public defaultRecoverer;
 
-    address public feeTo;
+    address public platformFeeTo;
 
     mapping(address => mapping(address => address)) public getPair;
     address[] public allPairs;
 
     event PairCreated(address indexed token0, address indexed token1, address pair, uint);
-    event FeeToChanged(address oldFeeTo, address newFeeTo);
+    event PlatformFeeToChanged(address oldFeeTo, address newFeeTo);
     event DefaultSwapFeeChanged(uint oldDefaultSwapFee, uint newDefaultSwapFee);
     event DefaultPlatformFeeChanged(uint oldDefaultPlatformFee, uint newDefaultPlatformFee);
     event DefaultRecovererChanged(address oldDefaultRecoverer, address newDefaultRecoverer);
@@ -51,9 +51,9 @@ contract UniswapV2Factory is IUniswapV2Factory, Ownable {
         emit PairCreated(token0, token1, pair, allPairs.length);
     }
 
-    function setFeeTo(address _feeTo) external onlyOwner {
-        emit FeeToChanged(feeTo, _feeTo);
-        feeTo = _feeTo;
+    function setPlatformFeeTo(address _platformFeeTo) external onlyOwner {
+        emit PlatformFeeToChanged(platformFeeTo, _platformFeeTo);
+        platformFeeTo = _platformFeeTo;
     }
     
     function setDefaultSwapFee(uint _swapFee) external onlyOwner {
@@ -64,6 +64,11 @@ contract UniswapV2Factory is IUniswapV2Factory, Ownable {
         defaultSwapFee = _swapFee;
     }
     
+    function defaultPlatformFeeOn() external view returns (bool _platformFeeOn)
+    {
+        _platformFeeOn = defaultPlatformFee > 0;
+    }
+
     function setDefaultPlatformFee(uint _platformFee) external onlyOwner {
         require(_platformFee <= MAX_PLATFORM_FEE, "Vexchange: INVALID_PLATFORM_FEE");
         

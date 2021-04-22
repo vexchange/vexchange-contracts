@@ -102,7 +102,7 @@ describe('UniswapV2Pair', () => {
       // Ensure the the swap fee is set to 0.3% (per assumptions in data-set above)
       await factory.setSwapFeeForPair( pair.address, 30 );
 
-      // Ensure the platform fee is zero (equiv to original feeTo off)
+      // Ensure the platform fee is zero (equiv to original uniswap 'feeTo' off)
       await factory.setPlatformFeeForPair( pair.address, 0 );
 
       const [outputAmount, token0Amount, token1Amount, inputAmount] = optimisticTestCase
@@ -320,11 +320,11 @@ describe('UniswapV2Pair', () => {
   /**
    * Platform Fee off baseline case.
    */
-  it('feeTo:off', async () => {
+  it('platformFeeTo:off', async () => {
     // Ensure the the swap fee is set to 0.3%
     await factory.setSwapFeeForPair( pair.address, 30 );
 
-    // Ensure the platform fee is zero (equiv to original feeTo off)
+    // Ensure the platform fee is zero (equiv to original 'feeTo' off)
     await factory.setPlatformFeeForPair( pair.address, 0 );
 
     const token0Amount = expandTo18Decimals(1000)
@@ -352,8 +352,8 @@ describe('UniswapV2Pair', () => {
   /**
    * Platform Fee on basic base.
    */
-  it('feeTo:on', async () => {
-    await factory.setFeeTo(other.address)
+  it('platformFeeTo:on', async () => {
+    await factory.setPlatformFeeTo(other.address)
 
     const testSwapFee: number = 30
     const testPlatformFee: number = 1667
@@ -393,7 +393,7 @@ describe('UniswapV2Pair', () => {
     // Check the new total-supply: should be MINIMUM_LIQUIDITY + platform fee
     expect(await pair.totalSupply(), "Total supply").to.eq(MINIMUM_LIQUIDITY.add(expectedPlatformFee))
 
-    // Check that the fee receiver (account set to feeTo) received the fees
+    // Check that the fee receiver (account set to platformFeeTo) received the fees
     expect(await pair.balanceOf(other.address), "Fee receiver balance").to.eq(expectedPlatformFee)
 
     // Compare 1/6 uniswapV2 fee, using 0.1667 Vexchange Platform fee: run check to confirm < 0.02% variance.
