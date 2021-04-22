@@ -77,8 +77,8 @@ describe('UniswapV2Factory', () => {
     const tx = await factory.createPair(...TEST_ADDRESSES)
     const receipt = await tx.wait()
 
-    // Hard-coded gas cost based on be current extension
-    expect(receipt.gasUsed).to.eq(3001519)
+    // Hard-coded gas cost based on current extension
+    expect(receipt.gasUsed).to.eq(2982319)
   })
 
   it('setFeeTo', async () => {

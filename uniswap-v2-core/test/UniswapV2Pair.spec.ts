@@ -97,7 +97,14 @@ describe('UniswapV2Pair', () => {
     [1, 5, 5, '1003009027081243732'] // given amountOut, amountIn = ceiling(amountOut / .997)
   ].map(a => a.map(n => (typeof n === 'string' ? bigNumberify(n) : expandTo18Decimals(n))))
   optimisticTestCases.forEach((optimisticTestCase, i) => {
+ 
     it(`optimistic:${i}`, async () => {
+      // Ensure the the swap fee is set to 0.3% (per assumptions in data-set above)
+      await factory.setSwapFeeForPair( pair.address, 30 );
+
+      // Ensure the platform fee is zero (equiv to original feeTo off)
+      await factory.setPlatformFeeForPair( pair.address, 0 );
+
       const [outputAmount, token0Amount, token1Amount, inputAmount] = optimisticTestCase
       await addLiquidity(token0Amount, token1Amount)
       await token0.transfer(pair.address, inputAmount)
@@ -211,6 +218,7 @@ describe('UniswapV2Pair', () => {
     expect(await token1.balanceOf(wallet.address)).to.eq(totalSupplyToken1.sub(1000))
   })
 
+
   it('price{0,1}CumulativeLast', async () => {
     const token0Amount = expandTo18Decimals(3)
     const token1Amount = expandTo18Decimals(3)
@@ -244,46 +252,163 @@ describe('UniswapV2Pair', () => {
     expect((await pair.getReserves())[2], "Price 0 post sync").to.eq(blockTimestamp + 20)
   })
 
+
+  /**
+   * calcSwapWithdraw
+   * Returns the maximum withdrawl amount, based on the input amount and the 
+   * pair's (variable) fee. 
+   * 
+   * Note that this function is deliberately verbose.
+   *
+   * @param {number} aSwapFee The current swap-fee for the pair.
+   * @param {BigNumber} aSwapAmount The amount being swapped.
+   * @param {BigNumber} aToken0Balance The current balance of token-0 in the pair.
+   * @param {BigNumber} aToken1Balance The current balance of token-1 in the pair.
+   * @return {number} The max swapped amount to withdraw..
+   */
+  function calcSwapWithdraw( aSwapFee: number, aSwapAmount: BigNumber, 
+                            aWithdrawTokenBalance: BigNumber, aDepositTokenBalance: BigNumber ) : BigNumber
+  {
+    // The pair invariant for the pool
+    let pairInvariant: BigNumber = aWithdrawTokenBalance.mul(aDepositTokenBalance)
+
+    // The amount added to the liquidity pool after fees
+    let depositAfterFees : BigNumber = aSwapAmount.mul(10000-aSwapFee).div(10000)
+
+    // The new token1 total (add the incoming liquidity)
+    let depositTokenAfterDeposit: BigNumber = aDepositTokenBalance.add(depositAfterFees)
+
+    // Using the invariant, calculate the impact on token 0 from the new liquidity
+    let maxWithdrawTokenAvail: BigNumber = pairInvariant.div(depositTokenAfterDeposit)
+
+    // Check for rounding error (BigNumber division will floor instead of rounding);
+    // If product of token0Impact & token1AfterDeposity is less than invariant, increment the token0Impact.
+    if ( pairInvariant.gt( maxWithdrawTokenAvail.mul(depositTokenAfterDeposit) ) )
+    maxWithdrawTokenAvail = maxWithdrawTokenAvail.add(1)
+
+    // Calculate the new token 0 delta, which is the maximum amount that could be
+    // removed and still maintain the invariant
+    let maxTokenToWithdraw: BigNumber =  aWithdrawTokenBalance.sub(maxWithdrawTokenAvail)
+
+    return maxTokenToWithdraw 
+  } // calcSwapWithdraw
+
+
+  /**
+   * Test the calcSwapWithdraw function defined above, using pre-existing uniswap test-case mappings.
+   */
+  const calcMaxWithdrawTestCases: BigNumber[][] = [
+    [1, 5, 10, '1662497915624478906'],
+    [1, 10, 5, '453305446940074565'],
+ 
+    [2, 5, 10, '2851015155847869602'],
+    [2, 10, 5, '831248957812239453'],
+ 
+    [1, 10, 10, '906610893880149131'],
+    [1, 100, 100, '987158034397061298'],
+    [1, 1000, 1000, '996006981039903216']
+  ].map(a => a.map(n => (typeof n === 'string' ? bigNumberify(n) : expandTo18Decimals(n))))
+  calcMaxWithdrawTestCases.forEach((swapFeeTestCase, i) => {
+    it(`calcMaxWithdraw:${i}`, async () => {
+      const [swapAmount, depositTokenBalance, withdrawTokenBalance, expectedOutputAmount] = swapFeeTestCase
+
+      expect( calcSwapWithdraw( 30, swapAmount, withdrawTokenBalance, depositTokenBalance ) ).to.eq( expectedOutputAmount )
+    })
+  })
+
+
+  /**
+   * Platform Fee off baseline case.
+   */
   it('feeTo:off', async () => {
-    // Remove the platform fee (equiv to feeTo off)
+    // Ensure the the swap fee is set to 0.3%
+    await factory.setSwapFeeForPair( pair.address, 30 );
+
+    // Ensure the platform fee is zero (equiv to original feeTo off)
     await factory.setPlatformFeeForPair( pair.address, 0 );
 
     const token0Amount = expandTo18Decimals(1000)
     const token1Amount = expandTo18Decimals(1000)
     await addLiquidity(token0Amount, token1Amount)
 
+    // Confirm liquidity is established
+    const expectedLiquidity = expandTo18Decimals(1000) // geometric mean of token0Amount and token1Amount
+    expect(await pair.totalSupply(), "Initial total supply").to.eq(expectedLiquidity)
+    
+    const lSwapFee : number = await pair.swapFee()
     const swapAmount = expandTo18Decimals(1)
-    const expectedOutputAmount = bigNumberify('996006981039903216')
+
+    let expectedOutputAmount: BigNumber = calcSwapWithdraw( lSwapFee, swapAmount, token0Amount, token1Amount )
+
     await token1.transfer(pair.address, swapAmount)
     await pair.swap(expectedOutputAmount, 0, wallet.address, '0x', overrides)
 
-    const expectedLiquidity = expandTo18Decimals(1000)
+    // Drain the liquidity to verify no fee has been extracted on exit
     await pair.transfer(pair.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
     await pair.burn(wallet.address, overrides)
-    expect(await pair.totalSupply()).to.eq(MINIMUM_LIQUIDITY)
+    expect(await pair.totalSupply(), "Final total supply").to.eq(MINIMUM_LIQUIDITY)
   })
 
+  /**
+   * Platform Fee on basic base.
+   */
   it('feeTo:on', async () => {
     await factory.setFeeTo(other.address)
 
+    const testSwapFee: number = 30
+    const testPlatformFee: number = 1667
+
+    // Also set the platform fee to
+    await factory.setSwapFeeForPair( pair.address, testSwapFee );
+    await factory.setPlatformFeeForPair( pair.address, testPlatformFee );
+
+    // Prepare basic liquidity of 10^18 on each token
     const token0Amount = expandTo18Decimals(1000)
-    const token1Amount = expandTo18Decimals(1000)
+    const token1Amount = expandTo18Decimals(1000)    
     await addLiquidity(token0Amount, token1Amount)
 
+    // Confirm liquidity is established
+    const expectedLiquidity = expandTo18Decimals(1000) // geometric mean of token0Amount and token1Amount
+    expect(await pair.totalSupply(), "Initial total supply").to.eq(expectedLiquidity)
+
+    // Prepare for the swap - send tokens from test account (caller) into the pair
     const swapAmount = expandTo18Decimals(1)
-    const expectedOutputAmount = bigNumberify('996006981039903216')
+    let expectedOutputAmount: BigNumber = calcSwapWithdraw( testSwapFee, swapAmount, token0Amount, token1Amount )
     await token1.transfer(pair.address, swapAmount)
+
+    // Confirm the token1 balance in the pair, post transfer
+    expect(await token1.balanceOf(pair.address), "New token1 balance allocated to pair").to.eq(token1Amount.add(swapAmount))
+
+    // Perform the swap from token 1 to token 0
     await pair.swap(expectedOutputAmount, 0, wallet.address, '0x', overrides)
 
-    const expectedLiquidity = expandTo18Decimals(1000)
+    // Now transfer out the maximum liquidity in order to verify the remaining supply & fees etc
     await pair.transfer(pair.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
     await pair.burn(wallet.address, overrides)
-    expect(await pair.totalSupply()).to.eq(MINIMUM_LIQUIDITY.add('249750499251388'))
-    expect(await pair.balanceOf(other.address)).to.eq('249750499251388')
+    
+    // Expected fee @ 1/6 or 0.1667% is calculated at 249800449363648 which is a ~0.02% error off the original uniswap.
+    // (Original uniswap v2 equivalent ==> 249800449363648)
+    const expectedPlatformFee: BigNumber = bigNumberify(249800449363648)
+
+    // Check the new total-supply: should be MINIMUM_LIQUIDITY + platform fee
+    expect(await pair.totalSupply(), "Total supply").to.eq(MINIMUM_LIQUIDITY.add(expectedPlatformFee))
+
+    // Check that the fee receiver (account set to feeTo) received the fees
+    expect(await pair.balanceOf(other.address), "Fee receiver balance").to.eq(expectedPlatformFee)
+
+    // Compare 1/6 uniswapV2 fee, using 0.1667 Vexchange Platform fee: run check to confirm < 0.02% variance.
+    const token0ExpBalUniswapV2: BigNumber = bigNumberify( '249501683697445' )
+    const token0ExpBalVexchange: BigNumber = bigNumberify( '249551584034117' )
+    expect(token0ExpBalUniswapV2.div(token0ExpBalVexchange.sub(token0ExpBalUniswapV2)), "token 0 variance from uniswap v2 fee" ).to.gte(5000)
+
+    // Compare 1/6 uniswapV2 fee, using 0.1667 Vexchange Platform fee: run check to confirm < 0.02% variance.
+    const token1ExpBalUniswapV2: BigNumber = bigNumberify( '250000187312969' )
+    const token1ExpBalVexchange: BigNumber = bigNumberify( '250050187350364' )
+    expect(token1ExpBalUniswapV2.div(token1ExpBalVexchange.sub(token1ExpBalUniswapV2)), "token 1 variance from uniswap v2 fee" ).to.gte(5000)
 
     // using 1000 here instead of the symbolic MINIMUM_LIQUIDITY because the amounts only happen to be equal...
     // ...because the initial liquidity amounts were equal
-    expect(await token0.balanceOf(pair.address)).to.eq(bigNumberify(1000).add('249501683697445'))
-    expect(await token1.balanceOf(pair.address)).to.eq(bigNumberify(1000).add('250000187312969'))
+    expect(await token0.balanceOf(pair.address), "Token 0 balance of pair").to.eq(bigNumberify(1000).add(token0ExpBalVexchange))
+    expect(await token1.balanceOf(pair.address), "Token 1 balance of pair").to.eq(bigNumberify(1000).add(token1ExpBalVexchange))
   })
 })
