@@ -72,14 +72,14 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
     }
 
     function setSwapFee(uint _swapFee) external onlyFactory {
-        require(_swapFee > MIN_SWAP_FEE && _swapFee < MAX_SWAP_FEE, "Vexchange: INVALID_SWAP_FEE");
+        require(_swapFee >= MIN_SWAP_FEE && _swapFee <= MAX_SWAP_FEE, "Vexchange: INVALID_SWAP_FEE");
 
         emit SwapFeeChanged(swapFee, _swapFee);
         swapFee = _swapFee;
     }
 
     function setPlatformFee(uint _platformFee) external onlyFactory {
-        require(_platformFee < MAX_PLATFORM_FEE, "Vexchange: INVALID_PLATFORM_FEE");
+        require(_platformFee <= MAX_PLATFORM_FEE, "Vexchange: INVALID_PLATFORM_FEE");
 
         emit PlatformFeeChanged(platformFee, _platformFee);
         platformFee = _platformFee;
