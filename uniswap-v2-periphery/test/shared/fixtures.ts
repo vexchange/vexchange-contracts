@@ -38,6 +38,7 @@ interface V2Fixture {
 }
 
 export async function v2Fixture(provider: Web3Provider, [wallet]: Wallet[]): Promise<V2Fixture> {
+
   // deploy tokens
   const tokenA = await deployContract(wallet, ERC20, [expandTo18Decimals(10000)])
   const tokenB = await deployContract(wallet, ERC20, [expandTo18Decimals(10000)])
@@ -50,8 +51,8 @@ export async function v2Fixture(provider: Web3Provider, [wallet]: Wallet[]): Pro
 
   // deploy V2
   const defaultSwapFee = 30
-  const defaultPlatformFee = 0
-  const factoryV2 = await deployContract(wallet, UniswapV2Factory, [ defaultSwapFee, defaultPlatformFee, wallet.address])
+  const defaultPlatformFee = 1667
+  const factoryV2 = await deployContract(wallet, UniswapV2Factory, [defaultSwapFee, defaultPlatformFee, wallet.address], overrides)
 
   // deploy routers
   const router01 = await deployContract(wallet, UniswapV2Router01, [factoryV2.address, WETH.address], overrides)
