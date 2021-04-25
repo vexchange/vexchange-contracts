@@ -50,7 +50,7 @@ describe('UniswapV2Factory', () => {
     const create2Address = getCreate2Address(factory.address, tokens, bytecode)
     await expect(factory.createPair(...tokens))
       .to.emit(factory, 'PairCreated')
-      .withArgs(TEST_ADDRESSES[0], TEST_ADDRESSES[1], create2Address, bigNumberify(1))
+      .withArgs(TEST_ADDRESSES[0], TEST_ADDRESSES[1], create2Address, bigNumberify(1), expectedDefaultSwapFee, expectedDefaultPlatformFee)
 
     await expect(factory.createPair(...tokens)).to.be.reverted // UniswapV2: PAIR_EXISTS
     await expect(factory.createPair(...tokens.slice().reverse())).to.be.reverted // UniswapV2: PAIR_EXISTS
@@ -78,7 +78,7 @@ describe('UniswapV2Factory', () => {
     const receipt = await tx.wait()
 
     // Hard-coded gas cost based on current extension
-    expect(receipt.gasUsed).to.eq(2987739)
+    expect(receipt.gasUsed).to.eq(2988702)
   })
 
   it('setPlatformFeeTo', async () => {

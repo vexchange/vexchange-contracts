@@ -1,7 +1,7 @@
 pragma solidity >=0.5.0;
 
 interface IUniswapV2Factory {
-    event PairCreated(address indexed token0, address indexed token1, address pair, uint);
+    event PairCreated(address indexed token0, address indexed token1, address pair, uint, uint swapFee, uint platformFee);
     event PlatformFeeToChanged(address oldFeeTo, address newFeeTo);
     event DefaultSwapFeeChanged(uint oldDefaultSwapFee, uint newDefaultSwapFee);
     event DefaultPlatformFeeChanged(uint oldDefaultPlatformFee, uint newDefaultPlatformFee);
