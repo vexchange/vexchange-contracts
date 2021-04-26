@@ -50,8 +50,8 @@ export async function v2Fixture(provider: Web3Provider, [wallet]: Wallet[]): Pro
   await factoryV1.initializeFactory((await deployContract(wallet, UniswapV1Exchange, [])).address)
 
   // deploy V2
-  const defaultSwapFee = 30
-  const defaultPlatformFee = 1667
+  const defaultSwapFee = 30    // Align swapFee with uniswap-V2 original fee
+  const defaultPlatformFee = 0 // set platform to zero, equivalent to fee-off in uniswap-V2.
   const factoryV2 = await deployContract(wallet, UniswapV2Factory, [defaultSwapFee, defaultPlatformFee, wallet.address], overrides)
 
   // deploy routers

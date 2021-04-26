@@ -22,8 +22,8 @@ library UniswapV2Library {
                 factory,
                 keccak256(abi.encodePacked(token0, token1)),
 
-                // Updated hard-coded hash for current UniswapV2Pair - TODO: consider deriving programatically?
-                hex'4fc2fefbadcd22359675e866f829d2e15695915ac1312b86370dee778cf5bd71'
+                // Updated hard-coded hash for current UniswapV2Pair
+                hex'6f8dfa33b7de3aad60ff4bc86a2044b2ca08e84c8546135afe43bf5cabd22f2b'
             ))));
     }
 
