@@ -1,7 +1,7 @@
 import chai, { expect } from 'chai'
 import { Contract } from 'ethers'
 import { AddressZero } from 'ethers/constants'
-import { bigNumberify } from 'ethers/utils'
+import { BigNumber, bigNumberify } from 'ethers/utils'
 import { solidity, MockProvider, createFixtureLoader } from 'ethereum-waffle'
 
 import { getCreate2Address } from './shared/utilities'
@@ -26,8 +26,8 @@ describe('UniswapV2Factory', () => {
   const loadFixture = createFixtureLoader(provider, [wallet, other])
 
   let factory: Contract
-  let expectedDefaultSwapFee: number
-  let expectedDefaultPlatformFee: number
+  let expectedDefaultSwapFee: BigNumber
+  let expectedDefaultPlatformFee: BigNumber
 
   beforeEach(async () => {
     const fixture = await loadFixture(factoryFixture)
@@ -39,8 +39,8 @@ describe('UniswapV2Factory', () => {
 
   it('platformFeeTo, defaultSwapFee, defaultPlatformFee, defaultRecoverer, allPairsLength', async () => {
     expect(await factory.platformFeeTo()).to.eq(AddressZero)
-    expect(await factory.defaultSwapFee()).to.eq(expectedDefaultSwapFee.toString());
-    expect(await factory.defaultPlatformFee()).to.eq(expectedDefaultPlatformFee.toString());
+    expect(await factory.defaultSwapFee()).to.eq(expectedDefaultSwapFee);
+    expect(await factory.defaultPlatformFee()).to.eq(expectedDefaultPlatformFee);
     expect(await factory.defaultRecoverer()).to.eq(wallet.address);
     expect(await factory.allPairsLength()).to.eq(0)
   })

@@ -1,5 +1,6 @@
 import { Contract, Wallet } from 'ethers'
 import { Web3Provider } from 'ethers/providers'
+import { BigNumber, bigNumberify } from 'ethers/utils'
 import { deployContract } from 'ethereum-waffle'
 
 import { expandTo18Decimals } from './utilities'
@@ -10,8 +11,8 @@ import UniswapV2Pair from '../../build/UniswapV2Pair.json'
 
 interface FactoryFixture {
   factory: Contract
-  defaultSwapFee: number
-  defaultPlatformFee: number
+  defaultSwapFee: BigNumber
+  defaultPlatformFee: BigNumber
 
 }
 
@@ -21,8 +22,8 @@ const overrides = {
 
 export async function factoryFixture(_: Web3Provider, [wallet]: Wallet[]): Promise<FactoryFixture> {
   // Initial static default - defaults to uniswap original fee structure with no 'feeTo' set.
-  const defaultSwapFee = 30
-  const defaultPlatformFee = 0
+  const defaultSwapFee: BigNumber = bigNumberify(30)
+  const defaultPlatformFee: BigNumber = bigNumberify(0)
 
   const factory = await deployContract(wallet, UniswapV2Factory, [defaultSwapFee, defaultPlatformFee, wallet.address], overrides)
   return { factory, defaultSwapFee, defaultPlatformFee }
