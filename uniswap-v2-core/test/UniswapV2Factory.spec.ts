@@ -76,7 +76,7 @@ describe('UniswapV2Factory', () => {
     // Expected init-code (hard coded value is used in dependent modules as a gas optimisation, so also verified here).
     // Note: changing the hard-coded expected init-code value implies you will need to also update the dependency.
     // See dependency @ uniswap-v2-periphery/contracts/libraries/UniswapV2Library.sol
-    expect( initCode, "Pair init-code has not changed" ).to.eq('0x6f8dfa33b7de3aad60ff4bc86a2044b2ca08e84c8546135afe43bf5cabd22f2b')
+    expect(initCode, "UniswapV2Pair init-code").to.eq('0xfc21895a2612cf676afb40d6c9fe79b9081a24d853d5de43b7ed068a7d57ffcf')
   })
 
   it('createPair:reverse', async () => {
@@ -88,7 +88,7 @@ describe('UniswapV2Factory', () => {
     const receipt = await tx.wait()
 
     // Hard-coded gas cost based on current extension
-    expect(receipt.gasUsed).to.eq(2988702)
+    expect(receipt.gasUsed).to.eq(3001546)
   })
 
   it('setPlatformFeeTo', async () => {

@@ -154,7 +154,7 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
             uint _sqrtNewK = Math.sqrt(uint(_reserve0).mul(_reserve1));
             uint _sqrtOldK = Math.sqrt(kLast); // gas savings
         
-            if (_sqrtOldK != 0){
+            if (_sqrtOldK != 0) {
                 if (_sqrtNewK > _sqrtOldK) {
                     uint _sharesToIssue = _calcFee(_sqrtNewK, _sqrtOldK, platformFee, totalSupply);
                     if (_sharesToIssue > 0) _mint(platformFeeTo, _sharesToIssue);
