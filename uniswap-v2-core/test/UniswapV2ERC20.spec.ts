@@ -16,7 +16,7 @@ const TEST_AMOUNT = expandTo18Decimals(10)
 
 describe('UniswapV2ERC20', () => {
   const provider = new MockProvider({
-    hardfork: 'istanbul',
+    hardfork: 'constantinople',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
     gasLimit: 9999999
   })
@@ -44,7 +44,7 @@ describe('UniswapV2ERC20', () => {
             ),
             keccak256(toUtf8Bytes(name)),
             keccak256(toUtf8Bytes('1')),
-            1,
+            0x27,
             token.address
           ]
         )
@@ -102,7 +102,8 @@ describe('UniswapV2ERC20', () => {
       token,
       { owner: wallet.address, spender: other.address, value: TEST_AMOUNT },
       nonce,
-      deadline
+      deadline,
+      0x27
     )
 
     const { v, r, s } = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(wallet.privateKey.slice(2), 'hex'))

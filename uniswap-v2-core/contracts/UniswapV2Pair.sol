@@ -2,11 +2,12 @@ pragma solidity =0.5.16;
 
 import './interfaces/IUniswapV2Pair.sol';
 import './UniswapV2ERC20.sol';
-import './libraries/Math.sol';
-import './libraries/UQ112x112.sol';
-import './interfaces/IERC20.sol';
 import './interfaces/IUniswapV2Factory.sol';
 import './interfaces/IUniswapV2Callee.sol';
+import './libraries/Math.sol';
+import './interfaces/IERC20.sol';
+import './libraries/UQ112x112.sol';
+
 
 contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
     using SafeMath  for uint;
@@ -14,7 +15,20 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
 
     uint public constant MINIMUM_LIQUIDITY = 10**3;
     bytes4 private constant SELECTOR = bytes4(keccak256(bytes('transfer(address,uint256)')));
+    // 10000000000000000000000000000000000000000000000000000000000000000000000000000
+    uint256 public constant SQUARED_ACCURACY = 10_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000;
+    // 10000000000000000000
+    uint256 public constant ACCURACY         = 100_000_000_000_000_000_000_000_000_000_000_000_000;
+    uint256 public constant FEE_ACCURACY     = 10_000;
 
+    uint public constant MAX_PLATFORM_FEE = 5000;   // 50.00%
+    uint public constant MIN_SWAP_FEE     = 5;      //  0.05%
+    uint public constant MAX_SWAP_FEE     = 200;    //  2.00%
+
+    uint public swapFee;
+    uint public platformFee;
+
+    address public recoverer;
     address public factory;
     address public token0;
     address public token1;
@@ -35,15 +49,9 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         unlocked = 1;
     }
 
-    function getReserves() public view returns (uint112 _reserve0, uint112 _reserve1, uint32 _blockTimestampLast) {
-        _reserve0 = reserve0;
-        _reserve1 = reserve1;
-        _blockTimestampLast = blockTimestampLast;
-    }
-
-    function _safeTransfer(address token, address to, uint value) private {
-        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(SELECTOR, to, value));
-        require(success && (data.length == 0 || abi.decode(data, (bool))), 'UniswapV2: TRANSFER_FAILED');
+    modifier onlyFactory() {
+        require(msg.sender == factory, 'Vexchange: FORBIDDEN');
+        _;
     }
 
     event Mint(address indexed sender, uint amount0, uint amount1);
@@ -57,16 +65,56 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         address indexed to
     );
     event Sync(uint112 reserve0, uint112 reserve1);
+    event SwapFeeChanged(uint oldSwapFee, uint newSwapFee);
+    event PlatformFeeChanged(uint oldPlatformFee, uint newPlatformFee);
+    event RecovererChanged(address oldRecoverer, address newRecoverer);
 
     constructor() public {
         factory = msg.sender;
     }
 
+    function platformFeeOn() external view returns (bool _platformFeeOn)
+    {
+        _platformFeeOn = platformFee > 0;
+    }
+
+    function setSwapFee(uint _swapFee) external onlyFactory {
+        require(_swapFee >= MIN_SWAP_FEE && _swapFee <= MAX_SWAP_FEE, "Vexchange: INVALID_SWAP_FEE");
+
+        emit SwapFeeChanged(swapFee, _swapFee);
+        swapFee = _swapFee;
+    }
+
+    function setPlatformFee(uint _platformFee) external onlyFactory {
+        require(_platformFee <= MAX_PLATFORM_FEE, "Vexchange: INVALID_PLATFORM_FEE");
+
+        emit PlatformFeeChanged(platformFee, _platformFee);
+        platformFee = _platformFee;
+    }
+
+    function setRecoverer(address _recoverer) external onlyFactory {
+        emit RecovererChanged(recoverer, _recoverer);
+        recoverer = _recoverer;
+    }
+
+    function getReserves() public view returns (uint112 _reserve0, uint112 _reserve1, uint32 _blockTimestampLast) {
+        _reserve0 = reserve0;
+        _reserve1 = reserve1;
+        _blockTimestampLast = blockTimestampLast;
+    }
+
+    function _safeTransfer(address token, address to, uint value) private {
+        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(SELECTOR, to, value));
+        require(success && (data.length == 0 || abi.decode(data, (bool))), 'UniswapV2: TRANSFER_FAILED');
+    }
+
     // called once by the factory at time of deployment
-    function initialize(address _token0, address _token1) external {
+    function initialize(address _token0, address _token1, uint _swapFee, uint _platformFee) external {
         require(msg.sender == factory, 'UniswapV2: FORBIDDEN'); // sufficient check
         token0 = _token0;
         token1 = _token1;
+        swapFee = _swapFee;
+        platformFee = _platformFee;
     }
 
     // update reserves and, on the first call per block, price accumulators
@@ -85,20 +133,31 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         emit Sync(reserve0, reserve1);
     }
 
-    // if fee is on, mint liquidity equivalent to 1/6th of the growth in sqrt(k)
+    function _calcFee(uint _sqrtNewK, uint _sqrtOldK, uint _platformFee, uint _circulatingShares) internal pure returns (uint _sharesToIssue) {
+        // Assert newK & oldK        < uint112
+        // Assert _platformFee       < FEE_ACCURACY
+        // Assert _circulatingShares < uint112
+
+        uint256 _scaledGrowth = _sqrtNewK.mul(ACCURACY) / _sqrtOldK;                         // ASSERT: < UINT256
+        uint256 _scaledMultiplier = ACCURACY.sub(SQUARED_ACCURACY / _scaledGrowth);          // ASSERT: < UINT128
+        uint256 _scaledTargetOwnership = _scaledMultiplier.mul(_platformFee) / FEE_ACCURACY; // ASSERT: < UINT144 during maths, ends < UINT128
+
+        _sharesToIssue = _scaledTargetOwnership.mul(_circulatingShares) / ACCURACY.sub(_scaledTargetOwnership); // ASSERT: _scaledTargetOwnership < ACCURACY
+    }
+
     function _mintFee(uint112 _reserve0, uint112 _reserve1) private returns (bool feeOn) {
-        address feeTo = IUniswapV2Factory(factory).feeTo();
-        feeOn = feeTo != address(0);
-        uint _kLast = kLast; // gas savings
+        feeOn = platformFee > 0;
+        uint _kLast = kLast;
+
         if (feeOn) {
-            if (_kLast != 0) {
-                uint rootK = Math.sqrt(uint(_reserve0).mul(_reserve1));
-                uint rootKLast = Math.sqrt(_kLast);
-                if (rootK > rootKLast) {
-                    uint numerator = totalSupply.mul(rootK.sub(rootKLast));
-                    uint denominator = rootK.mul(5).add(rootKLast);
-                    uint liquidity = numerator / denominator;
-                    if (liquidity > 0) _mint(feeTo, liquidity);
+            address platformFeeTo = IUniswapV2Factory(factory).platformFeeTo();
+            uint _sqrtNewK = Math.sqrt(uint(_reserve0).mul(_reserve1));
+            uint _sqrtOldK = Math.sqrt(kLast); // gas savings
+        
+            if (_sqrtOldK != 0) {
+                if (_sqrtNewK > _sqrtOldK) {
+                    uint _sharesToIssue = _calcFee(_sqrtNewK, _sqrtOldK, platformFee, totalSupply);
+                    if (_sharesToIssue > 0) _mint(platformFeeTo, _sharesToIssue);
                 }
             }
         } else if (_kLast != 0) {
@@ -177,9 +236,9 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         uint amount1In = balance1 > _reserve1 - amount1Out ? balance1 - (_reserve1 - amount1Out) : 0;
         require(amount0In > 0 || amount1In > 0, 'UniswapV2: INSUFFICIENT_INPUT_AMOUNT');
         { // scope for reserve{0,1}Adjusted, avoids stack too deep errors
-        uint balance0Adjusted = balance0.mul(1000).sub(amount0In.mul(3));
-        uint balance1Adjusted = balance1.mul(1000).sub(amount1In.mul(3));
-        require(balance0Adjusted.mul(balance1Adjusted) >= uint(_reserve0).mul(_reserve1).mul(1000**2), 'UniswapV2: K');
+        uint balance0Adjusted = balance0.mul(10000).sub(amount0In.mul(swapFee));
+        uint balance1Adjusted = balance1.mul(10000).sub(amount1In.mul(swapFee));
+        require(balance0Adjusted.mul(balance1Adjusted) >= uint(_reserve0).mul(_reserve1).mul(10000**2), 'UniswapV2: K');
         }
 
         _update(balance0, balance1, _reserve0, _reserve1);
@@ -192,6 +251,16 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         address _token1 = token1; // gas savings
         _safeTransfer(_token0, to, IERC20(_token0).balanceOf(address(this)).sub(reserve0));
         _safeTransfer(_token1, to, IERC20(_token1).balanceOf(address(this)).sub(reserve1));
+    }
+    
+    function recoverToken(address token) external {
+        require(token != token0, "Vexchange: INVALID_TOKEN_TO_RECOVER");
+        require(token != token1, "Vexchange: INVALID_TOKEN_TO_RECOVER");
+        require(recoverer != address(0), "Vexchange: RECOVERER_ZERO_ADDRESS");
+        
+        uint _amountToRecover = IERC20(token).balanceOf(address(this));
+
+        _safeTransfer(token, recoverer, _amountToRecover);
     }
 
     // force reserves to match balances

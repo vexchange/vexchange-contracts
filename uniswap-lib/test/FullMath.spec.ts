@@ -13,7 +13,7 @@ const overrides = {
 describe('FullMath', () => {
   const provider = new MockProvider({
     ganacheOptions: {
-      hardfork: 'istanbul',
+      hardfork: 'constantinople',
       mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
       gasLimit: 9999999,
     },

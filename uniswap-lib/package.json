@@ -35,9 +35,9 @@
     "lint": "prettier ./test/*.ts --check",
     "precompile": "rimraf ./build/",
     "compile": "waffle",
-    "pretest": "yarn compile",
+    "pretest": "npm run compile",
     "test": "mocha",
-    "prepublishOnly": "yarn test"
+    "prepublishOnly": "npm run test"
   },
   "license": "GPL-3.0-or-later"
 }

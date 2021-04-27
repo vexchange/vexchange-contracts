@@ -13,11 +13,11 @@ Solidity libraries that are shared across Uniswap contracts. This package focuse
 
 ## Install
 
-Run `yarn` to install dependencies.
+Run `npm ci` to install dependencies.
 
 ## Test
 
-Run `yarn test` to execute the test suite.
+Run `npm run test` to execute the test suite.
 
 ## Usage
 

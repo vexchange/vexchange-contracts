@@ -32,6 +32,17 @@ interface IUniswapV2Pair {
         address indexed to
     );
     event Sync(uint112 reserve0, uint112 reserve1);
+    event SwapFeeChanged(uint oldSwapFee, uint newSwapFee);
+    event PlatformFeeChanged(uint oldPlatformFee, uint newPlatformFee);
+
+    function MAX_PLATFORM_FEE() external view returns(uint);
+    function MIN_SWAP_FEE() external view returns(uint);
+    function MAX_SWAP_FEE() external view returns(uint);
+
+    function swapFee() external view returns(uint);
+    function platformFee() external view returns(uint);
+    function platformFeeOn() external view returns (bool);
+    function recoverer() external view returns (address);
 
     function MINIMUM_LIQUIDITY() external pure returns (uint);
     function factory() external view returns (address);
@@ -47,6 +58,11 @@ interface IUniswapV2Pair {
     function swap(uint amount0Out, uint amount1Out, address to, bytes calldata data) external;
     function skim(address to) external;
     function sync() external;
+    function recoverToken(address token) external;
+    
+    function setSwapFee(uint _swapFee) external;
+    function setPlatformFee(uint _platformFee) external;
+    function setRecoverer(address _recoverer) external;
 
-    function initialize(address, address) external;
+    function initialize(address _token0, address _token1, uint _swapFee, uint _platformFee) external;
 }

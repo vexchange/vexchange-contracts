@@ -17,17 +17,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” 
 Specific tweaks:
 - Change variable names of LP token `symbol` and `name`.
 - `CREATE2` hash. 
-- `chainId()` OPCODE call remains the same
-- Compiler option `istanbul` remains the same.
+- `chainId()` OPCODE call replaced with hard-coded value (0x27 or 0x4a)
+- Compiler option changed to `constantinople`
 
-This will **NOT** enable to be run on VeChain now because the EVM doesn't support it, yet.
-
-But eventually it is the unified set of code that is deployed on VeChain after the EVM support `istanbul` is in place.
-
-## `testnet` branch
-Based on `main` branch.
-
-Specific tweaks: 
-- `chainId()` tweak (fixed value) for different network: “testnet”.
-- `istanbul` compiler option change to `constantinpole`.
-- `CREATE2` hash change of respective files.
+Before deploy:
+ - Set desired chainTag 0x27 for testnet, 0x4a for mainnet. Default is testnet.
+ - Check CREATE2 hashes using check_create2 script

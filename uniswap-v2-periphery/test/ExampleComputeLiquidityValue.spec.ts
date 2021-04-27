@@ -16,7 +16,7 @@ const overrides = {
 
 describe('ExampleComputeLiquidityValue', () => {
   const provider = new MockProvider({
-    hardfork: 'istanbul',
+    hardfork: 'constantinople',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
     gasLimit: 9999999
   })
@@ -36,6 +36,7 @@ describe('ExampleComputeLiquidityValue', () => {
     pair = fixture.pair
     factory = fixture.factoryV2
     router = fixture.router
+
     computeLiquidityValue = await deployContract(
       wallet,
       ExampleComputeLiquidityValue,
@@ -96,7 +97,8 @@ describe('ExampleComputeLiquidityValue', () => {
 
     describe('fee on', () => {
       beforeEach('turn on fee', async () => {
-        await factory.setFeeTo(wallet.address)
+        // Set platform fee to 0.1667%, approx. equivalent to uniswap-V2 (1/6)
+        await factory.setPlatformFeeForPair( pair.address, 1667 );
       })
 
       // this is necessary to cause kLast to be set
@@ -249,7 +251,7 @@ describe('ExampleComputeLiquidityValue', () => {
             100,
             expandTo18Decimals(5)
           )
-        ).to.eq('12705')
+        ).to.eq('10947')
       })
 
       it('gas higher price', async () => {
@@ -261,7 +263,7 @@ describe('ExampleComputeLiquidityValue', () => {
             105,
             expandTo18Decimals(5)
           )
-        ).to.eq('13478')
+        ).to.eq('11720')
       })
 
       it('gas lower price', async () => {
@@ -273,7 +275,7 @@ describe('ExampleComputeLiquidityValue', () => {
             95,
             expandTo18Decimals(5)
           )
-        ).to.eq('13523')
+        ).to.eq('11765')
       })
 
       describe('after a swap', () => {
@@ -322,7 +324,8 @@ describe('ExampleComputeLiquidityValue', () => {
 
     describe('fee is on', () => {
       beforeEach('turn on fee', async () => {
-        await factory.setFeeTo(wallet.address)
+        // Set platform fee to 0.1667%, approx. equivalent to uniswap-V2 (1/6)
+        await factory.setPlatformFeeForPair( pair.address, 1667 );
       })
 
       // this is necessary to cause kLast to be set
@@ -380,7 +383,7 @@ describe('ExampleComputeLiquidityValue', () => {
             100,
             expandTo18Decimals(5)
           )
-        ).to.eq('16938')
+        ).to.eq('14559')
       })
 
       it('gas higher price', async () => {
@@ -392,7 +395,7 @@ describe('ExampleComputeLiquidityValue', () => {
             105,
             expandTo18Decimals(5)
           )
-        ).to.eq('18475')
+        ).to.eq('16096')
       })
 
       it('gas lower price', async () => {
@@ -404,7 +407,7 @@ describe('ExampleComputeLiquidityValue', () => {
             95,
             expandTo18Decimals(5)
           )
-        ).to.eq('18406')
+        ).to.eq('16027')
       })
 
       describe('after a swap', () => {

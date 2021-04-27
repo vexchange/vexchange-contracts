@@ -22,7 +22,7 @@ enum RouterVersion {
 describe('UniswapV2Router{01,02}', () => {
   for (const routerVersion of Object.keys(RouterVersion)) {
     const provider = new MockProvider({
-      hardfork: 'istanbul',
+      hardfork: 'constantinople',
       mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
       gasLimit: 9999999
     })
@@ -245,7 +245,8 @@ describe('UniswapV2Router{01,02}', () => {
           pair,
           { owner: wallet.address, spender: router.address, value: expectedLiquidity.sub(MINIMUM_LIQUIDITY) },
           nonce,
-          MaxUint256
+          MaxUint256,
+          0x27
         )
 
         const { v, r, s } = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(wallet.privateKey.slice(2), 'hex'))
@@ -281,7 +282,8 @@ describe('UniswapV2Router{01,02}', () => {
           WETHPair,
           { owner: wallet.address, spender: router.address, value: expectedLiquidity.sub(MINIMUM_LIQUIDITY) },
           nonce,
-          MaxUint256
+          MaxUint256,
+          0x27
         )
 
         const { v, r, s } = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(wallet.privateKey.slice(2), 'hex'))
@@ -368,8 +370,8 @@ describe('UniswapV2Router{01,02}', () => {
           const receipt = await tx.wait()
           expect(receipt.gasUsed).to.eq(
             {
-              [RouterVersion.UniswapV2Router01]: 101876,
-              [RouterVersion.UniswapV2Router02]: 101898
+              [RouterVersion.UniswapV2Router01]: 96903,
+              [RouterVersion.UniswapV2Router02]: 96925
             }[routerVersion as RouterVersion]
           )
         }).retries(3)
@@ -517,8 +519,8 @@ describe('UniswapV2Router{01,02}', () => {
           const receipt = await tx.wait()
           expect(receipt.gasUsed).to.eq(
             {
-              [RouterVersion.UniswapV2Router01]: 138770,
-              [RouterVersion.UniswapV2Router02]: 138770
+              [RouterVersion.UniswapV2Router01]: 131685,
+              [RouterVersion.UniswapV2Router02]: 131685
             }[routerVersion as RouterVersion]
           )
         }).retries(3)

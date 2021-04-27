@@ -1,7 +1,7 @@
 import chai, { expect } from 'chai'
 import { Contract } from 'ethers'
 import { AddressZero } from 'ethers/constants'
-import { bigNumberify } from 'ethers/utils'
+import { BigNumber, bigNumberify } from 'ethers/utils'
 import { solidity, MockProvider, createFixtureLoader } from 'ethereum-waffle'
 
 import { getCreate2Address } from './shared/utilities'
@@ -18,7 +18,7 @@ const TEST_ADDRESSES: [string, string] = [
 
 describe('UniswapV2Factory', () => {
   const provider = new MockProvider({
-    hardfork: 'istanbul',
+    hardfork: 'constantinople',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
     gasLimit: 9999999
   })
@@ -26,14 +26,22 @@ describe('UniswapV2Factory', () => {
   const loadFixture = createFixtureLoader(provider, [wallet, other])
 
   let factory: Contract
+  let expectedDefaultSwapFee: BigNumber
+  let expectedDefaultPlatformFee: BigNumber
+
   beforeEach(async () => {
     const fixture = await loadFixture(factoryFixture)
     factory = fixture.factory
+
+    expectedDefaultSwapFee = fixture.defaultSwapFee
+    expectedDefaultPlatformFee = fixture.defaultPlatformFee
   })
 
-  it('feeTo, feeToSetter, allPairsLength', async () => {
-    expect(await factory.feeTo()).to.eq(AddressZero)
-    expect(await factory.feeToSetter()).to.eq(wallet.address)
+  it('platformFeeTo, defaultSwapFee, defaultPlatformFee, defaultRecoverer, allPairsLength', async () => {
+    expect(await factory.platformFeeTo()).to.eq(AddressZero)
+    expect(await factory.defaultSwapFee()).to.eq(expectedDefaultSwapFee);
+    expect(await factory.defaultPlatformFee()).to.eq(expectedDefaultPlatformFee);
+    expect(await factory.defaultRecoverer()).to.eq(wallet.address);
     expect(await factory.allPairsLength()).to.eq(0)
   })
 
@@ -42,7 +50,7 @@ describe('UniswapV2Factory', () => {
     const create2Address = getCreate2Address(factory.address, tokens, bytecode)
     await expect(factory.createPair(...tokens))
       .to.emit(factory, 'PairCreated')
-      .withArgs(TEST_ADDRESSES[0], TEST_ADDRESSES[1], create2Address, bigNumberify(1))
+      .withArgs(TEST_ADDRESSES[0], TEST_ADDRESSES[1], create2Address, bigNumberify(1), expectedDefaultSwapFee, expectedDefaultPlatformFee)
 
     await expect(factory.createPair(...tokens)).to.be.reverted // UniswapV2: PAIR_EXISTS
     await expect(factory.createPair(...tokens.slice().reverse())).to.be.reverted // UniswapV2: PAIR_EXISTS
@@ -61,6 +69,16 @@ describe('UniswapV2Factory', () => {
     await createPair(TEST_ADDRESSES)
   })
 
+  it('retreivePairInitCode', async () => {
+    // Retrieve the UniswapV2Pair init-code from the factory
+    const initCode: BigNumber =  await factory.getPairInitHash()
+
+    // Expected init-code (hard coded value is used in dependent modules as a gas optimisation, so also verified here).
+    // Note: changing the hard-coded expected init-code value implies you will need to also update the dependency.
+    // See dependency @ uniswap-v2-periphery/contracts/libraries/UniswapV2Library.sol
+    expect(initCode, "UniswapV2Pair init-code").to.eq('0xfc21895a2612cf676afb40d6c9fe79b9081a24d853d5de43b7ed068a7d57ffcf')
+  })
+
   it('createPair:reverse', async () => {
     await createPair(TEST_ADDRESSES.slice().reverse() as [string, string])
   })
@@ -68,19 +86,14 @@ describe('UniswapV2Factory', () => {
   it('createPair:gas', async () => {
     const tx = await factory.createPair(...TEST_ADDRESSES)
     const receipt = await tx.wait()
-    expect(receipt.gasUsed).to.eq(2512920)
+
+    // Hard-coded gas cost based on current extension
+    expect(receipt.gasUsed).to.eq(3001546)
   })
 
-  it('setFeeTo', async () => {
-    await expect(factory.connect(other).setFeeTo(other.address)).to.be.revertedWith('UniswapV2: FORBIDDEN')
-    await factory.setFeeTo(wallet.address)
-    expect(await factory.feeTo()).to.eq(wallet.address)
-  })
-
-  it('setFeeToSetter', async () => {
-    await expect(factory.connect(other).setFeeToSetter(other.address)).to.be.revertedWith('UniswapV2: FORBIDDEN')
-    await factory.setFeeToSetter(other.address)
-    expect(await factory.feeToSetter()).to.eq(other.address)
-    await expect(factory.setFeeToSetter(wallet.address)).to.be.revertedWith('UniswapV2: FORBIDDEN')
+  it('setPlatformFeeTo', async () => {
+    await expect(factory.connect(other).setPlatformFeeTo(other.address)).to.be.revertedWith('VexchangeV2: FORBIDDEN')
+    await factory.setPlatformFeeTo(wallet.address)
+    expect(await factory.platformFeeTo()).to.eq(wallet.address)
   })
 })

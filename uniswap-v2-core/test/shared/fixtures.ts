@@ -1,5 +1,6 @@
 import { Contract, Wallet } from 'ethers'
 import { Web3Provider } from 'ethers/providers'
+import { BigNumber, bigNumberify } from 'ethers/utils'
 import { deployContract } from 'ethereum-waffle'
 
 import { expandTo18Decimals } from './utilities'
@@ -10,6 +11,9 @@ import UniswapV2Pair from '../../build/UniswapV2Pair.json'
 
 interface FactoryFixture {
   factory: Contract
+  defaultSwapFee: BigNumber
+  defaultPlatformFee: BigNumber
+
 }
 
 const overrides = {
@@ -17,8 +21,12 @@ const overrides = {
 }
 
 export async function factoryFixture(_: Web3Provider, [wallet]: Wallet[]): Promise<FactoryFixture> {
-  const factory = await deployContract(wallet, UniswapV2Factory, [wallet.address], overrides)
-  return { factory }
+  // Initial static default - defaults to uniswap original fee structure with no 'feeTo' set.
+  const defaultSwapFee: BigNumber = bigNumberify(30)
+  const defaultPlatformFee: BigNumber = bigNumberify(0)
+
+  const factory = await deployContract(wallet, UniswapV2Factory, [defaultSwapFee, defaultPlatformFee, wallet.address], overrides)
+  return { factory, defaultSwapFee, defaultPlatformFee }
 }
 
 interface PairFixture extends FactoryFixture {
@@ -28,7 +36,7 @@ interface PairFixture extends FactoryFixture {
 }
 
 export async function pairFixture(provider: Web3Provider, [wallet]: Wallet[]): Promise<PairFixture> {
-  const { factory } = await factoryFixture(provider, [wallet])
+  const { factory, defaultSwapFee, defaultPlatformFee } = await factoryFixture(provider, [wallet])
 
   const tokenA = await deployContract(wallet, ERC20, [expandTo18Decimals(10000)], overrides)
   const tokenB = await deployContract(wallet, ERC20, [expandTo18Decimals(10000)], overrides)
@@ -41,5 +49,5 @@ export async function pairFixture(provider: Web3Provider, [wallet]: Wallet[]): P
   const token0 = tokenA.address === token0Address ? tokenA : tokenB
   const token1 = tokenA.address === token0Address ? tokenB : tokenA
 
-  return { factory, token0, token1, pair }
+  return { factory, defaultSwapFee, defaultPlatformFee, token0, token1, pair }
 }

@@ -105,7 +105,8 @@ library UniswapV2LiquidityMathLibrary {
     ) internal view returns (uint256 tokenAAmount, uint256 tokenBAmount) {
         (uint256 reservesA, uint256 reservesB) = UniswapV2Library.getReserves(factory, tokenA, tokenB);
         IUniswapV2Pair pair = IUniswapV2Pair(UniswapV2Library.pairFor(factory, tokenA, tokenB));
-        bool feeOn = IUniswapV2Factory(factory).feeTo() != address(0);
+
+        bool feeOn = pair.platformFeeOn();
         uint kLast = feeOn ? pair.kLast() : 0;
         uint totalSupply = pair.totalSupply();
         return computeLiquidityValue(reservesA, reservesB, totalSupply, liquidityAmount, feeOn, kLast);
@@ -123,9 +124,9 @@ library UniswapV2LiquidityMathLibrary {
     ) internal view returns (
         uint256 tokenAAmount,
         uint256 tokenBAmount
-    ) {
-        bool feeOn = IUniswapV2Factory(factory).feeTo() != address(0);
+    ) {        
         IUniswapV2Pair pair = IUniswapV2Pair(UniswapV2Library.pairFor(factory, tokenA, tokenB));
+        bool feeOn = pair.platformFeeOn();
         uint kLast = feeOn ? pair.kLast() : 0;
         uint totalSupply = pair.totalSupply();
 
