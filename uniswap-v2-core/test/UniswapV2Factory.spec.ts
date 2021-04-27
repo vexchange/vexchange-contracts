@@ -69,6 +69,16 @@ describe('UniswapV2Factory', () => {
     await createPair(TEST_ADDRESSES)
   })
 
+  it('retreivePairInitCode', async () => {
+    // Retrieve the UniswapV2Pair init-code from the factory
+    const initCode: BigNumber =  await factory.getPairInitHash()
+
+    // Expected init-code (hard coded value is used in dependent modules as a gas optimisation, so also verified here).
+    // Note: changing the hard-coded expected init-code value implies you will need to also update the dependency.
+    // See dependency @ uniswap-v2-periphery/contracts/libraries/UniswapV2Library.sol
+    expect( initCode, "Pair init-code has not changed" ).to.eq('0x6f8dfa33b7de3aad60ff4bc86a2044b2ca08e84c8546135afe43bf5cabd22f2b')
+  })
+
   it('createPair:reverse', async () => {
     await createPair(TEST_ADDRESSES.slice().reverse() as [string, string])
   })
