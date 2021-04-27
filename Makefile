@@ -12,9 +12,9 @@ all: install-deps test
 
 # Update all dependencies
 install-deps:
-	cd uniswap-lib && npm install
-	cd uniswap-v2-core && npm install
-	cd uniswap-v2-periphery && npm install
+	cd uniswap-lib && npm ci
+	cd uniswap-v2-core && npm ci
+	cd uniswap-v2-periphery && npm ci
 
 # Compile contracts
 compile:
