@@ -51,6 +51,11 @@ contract UniswapV2Factory is IUniswapV2Factory, Ownable {
         emit PairCreated(token0, token1, pair, allPairs.length, defaultSwapFee, defaultPlatformFee);
     }
 
+    function getPairInitHash() public pure returns(bytes32){
+        bytes memory rawInitCode = type(UniswapV2Pair).creationCode;
+        return keccak256(abi.encodePacked(rawInitCode));
+    }
+
     function setPlatformFeeTo(address _platformFeeTo) external onlyOwner {
         emit PlatformFeeToChanged(platformFeeTo, _platformFeeTo);
         platformFeeTo = _platformFeeTo;
