@@ -147,20 +147,21 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
 
     function _mintFee(uint112 _reserve0, uint112 _reserve1) private returns (bool feeOn) {
         feeOn = platformFee > 0;
-        uint _kLast = kLast;
 
         if (feeOn) {
-            address platformFeeTo = IUniswapV2Factory(factory).platformFeeTo();
-            uint _sqrtNewK = Math.sqrt(uint(_reserve0).mul(_reserve1));
             uint _sqrtOldK = Math.sqrt(kLast); // gas savings
-        
+
             if (_sqrtOldK != 0) {
+                uint _sqrtNewK = Math.sqrt(uint(_reserve0).mul(_reserve1));
+
                 if (_sqrtNewK > _sqrtOldK) {
                     uint _sharesToIssue = _calcFee(_sqrtNewK, _sqrtOldK, platformFee, totalSupply);
+
+                    address platformFeeTo = IUniswapV2Factory(factory).platformFeeTo();
                     if (_sharesToIssue > 0) _mint(platformFeeTo, _sharesToIssue);
                 }
             }
-        } else if (_kLast != 0) {
+        } else if (kLast != 0) {
             kLast = 0;
         }
     }
