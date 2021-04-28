@@ -218,7 +218,6 @@ describe('UniswapV2Pair', () => {
     expect(await token1.balanceOf(wallet.address)).to.eq(totalSupplyToken1.sub(1000))
   })
 
-
   it('price{0,1}CumulativeLast', async () => {
     const token0Amount = expandTo18Decimals(3)
     const token1Amount = expandTo18Decimals(3)
@@ -251,7 +250,6 @@ describe('UniswapV2Pair', () => {
     expect(await pair.price1CumulativeLast(), "Price 1 post sync").to.eq(initialPrice[1].mul(10).add(newPrice[1].mul(10)))
     expect((await pair.getReserves())[2], "Price 0 post sync").to.eq(blockTimestamp + 20)
   })
-
 
   /**
    * calcSwapWithdraw
@@ -293,7 +291,6 @@ describe('UniswapV2Pair', () => {
     return maxTokenToWithdraw 
   } // calcSwapWithdraw
 
-
   /**
    * Test the calcSwapWithdraw function defined above, using pre-existing uniswap test-case mappings.
    */
@@ -315,7 +312,6 @@ describe('UniswapV2Pair', () => {
       expect( calcSwapWithdraw( 30, swapAmount, withdrawTokenBalance, depositTokenBalance ) ).to.eq( expectedOutputAmount )
     })
   })
-
 
   /**
    * Platform Fee off baseline case.
@@ -341,7 +337,13 @@ describe('UniswapV2Pair', () => {
     let expectedOutputAmount: BigNumber = calcSwapWithdraw( lSwapFee, swapAmount, token0Amount, token1Amount )
 
     await token1.transfer(pair.address, swapAmount)
-    await pair.swap(expectedOutputAmount, 0, wallet.address, '0x', overrides)
+    const tx = await pair.swap(expectedOutputAmount, 0, wallet.address, '0x', overrides)
+    const receipt = await tx.wait()
+
+    // Gas price seems to be inconsistent for the swap
+    expect(receipt.gasUsed).to.satisfy( function(gas: number) {
+      return ((gas==56403) || (gas==97219));
+    })
 
     // Drain the liquidity to verify no fee has been extracted on exit
     await pair.transfer(pair.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
@@ -380,11 +382,25 @@ describe('UniswapV2Pair', () => {
     expect(await token1.balanceOf(pair.address), "New token1 balance allocated to pair").to.eq(token1Amount.add(swapAmount))
 
     // Perform the swap from token 1 to token 0
-    await pair.swap(expectedOutputAmount, 0, wallet.address, '0x', overrides)
+    const tx = await pair.swap(expectedOutputAmount, 0, wallet.address, '0x', overrides)
+    const receipt = await tx.wait()
+
+    // Gas price seems to be inconsistent for the swap; most likely due to test framework. (TBC)
+    // Every ~ 1 in 4 runs will see the higher gas cost.
+    expect(receipt.gasUsed).to.satisfy( function(gas: number) {
+      return ((gas==56403) || (gas==97219));
+    })
 
     // Now transfer out the maximum liquidity in order to verify the remaining supply & fees etc
     await pair.transfer(pair.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
-    await pair.burn(wallet.address, overrides)
+    const burnTx = await pair.burn(wallet.address, overrides)
+    const burnReceipt = await burnTx.wait()
+
+    // Gas price seems to be inconsistent for the swap; most likely due to test framework. (TBC)
+    // Every ~ 1 in 10 runs will see the higher gas cost.
+    expect(burnReceipt.gasUsed, "Check burn op gas cost (expect 159865 or 119049)").to.satisfy( function(gas: number) {
+      return ((gas==159865) || (gas==119049));
+    })
     
     // Expected fee @ 1/6 or 0.1667% is calculated at 249800449363715 which is a ~0.02% error off the original uniswap.
     // (Original uniswap v2 equivalent ==> 249750499251388)
