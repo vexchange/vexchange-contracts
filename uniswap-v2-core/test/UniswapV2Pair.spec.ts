@@ -340,9 +340,6 @@ describe('UniswapV2Pair', () => {
     const tx = await pair.swap(expectedOutputAmount, 0, wallet.address, '0x', overrides)
     const receipt = await tx.wait()
 
-    // Measure fee-on swap gas cost
-    console.log(receipt.gasUsed.toString())
-
     // Gas price seems to be inconsistent for the swap
     expect(receipt.gasUsed).to.satisfy( function(gas: number) {
       return ((gas==56403) || (gas==97219));
@@ -388,17 +385,22 @@ describe('UniswapV2Pair', () => {
     const tx = await pair.swap(expectedOutputAmount, 0, wallet.address, '0x', overrides)
     const receipt = await tx.wait()
 
-    // Measure fee-on swap gas cost
-    console.log(receipt.gasUsed.toString())
-
-    // Gas price seems to be inconsistent for the swap
+    // Gas price seems to be inconsistent for the swap; most likely due to test framework. (TBC)
+    // Every ~ 1 in 4 runs will see the higher gas cost.
     expect(receipt.gasUsed).to.satisfy( function(gas: number) {
       return ((gas==56403) || (gas==97219));
     })
 
     // Now transfer out the maximum liquidity in order to verify the remaining supply & fees etc
     await pair.transfer(pair.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
-    await pair.burn(wallet.address, overrides)
+    const burnTx = await pair.burn(wallet.address, overrides)
+    const burnReceipt = await burnTx.wait()
+
+    // Gas price seems to be inconsistent for the swap; most likely due to test framework. (TBC)
+    // Every ~ 1 in 10 runs will see the higher gas cost.
+    expect(burnReceipt.gasUsed, "Check burn op gas cost (expect 159865 or 119049)").to.satisfy( function(gas: number) {
+      return ((gas==159865) || (gas==119049));
+    })
     
     // Expected fee @ 1/6 or 0.1667% is calculated at 249800449363715 which is a ~0.02% error off the original uniswap.
     // (Original uniswap v2 equivalent ==> 249750499251388)
