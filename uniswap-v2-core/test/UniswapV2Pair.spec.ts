@@ -488,6 +488,9 @@ describe('UniswapV2Pair', () => {
    * 
    * Test values: 
    *   platformFee, token0Initial, token1Initial, token0Final, token1Final, resultantFee
+   * 
+   * Expected resultantFee below has been verified with eq (6) of uniswap v2 whitepaper.
+   * https://uniswap.org/whitepaper.pdf
    */
   const calcPlatformFeeTestCases: BigNumber[][] = [
     [    0,  10000,  10000,   20000,   20000,     0 ], //< Zero plaform-fee.
