@@ -520,6 +520,7 @@ describe('UniswapV2Pair', () => {
     [ 2500,  10000,  10000,   50000,   50000,  2500 ],
     [ 2500,  20000,  20000,   60000,   60000,  3999 ],
     [ 2500, 100000, 100000,  500000,  500000, 25000 ], 
+    [ 3000,  10000,  10000,   12000,   12000,   526 ],
     [ 5000,  10000,  10000,   50000,   50000,  6666 ],
     [ 5000, 100000, 100000,  500000,  500000, 66666 ],
     [ 5000, 100000, 100000, 1000000, 1000000, 81818 ],
@@ -601,9 +602,6 @@ describe('UniswapV2Pair', () => {
         // Gas price seems to be inconsistent for the swap
         expect(swapReceipt.gasUsed, "swap gas fee").to.satisfy( function(gas: number) {
           const result = ((gas==56403) || (gas==97155) || (gas==97219) || (gas==56339))
-          if (!result)
-            console.log(`!!! Gas cost unexpected for swap: ${gas}`)
-
           return result
         })
     
@@ -624,9 +622,9 @@ describe('UniswapV2Pair', () => {
         expect(await pair.totalSupply(), "Final total supply").to.satisfy( 
           function(a:BigNumber) { return closeTo(a, expectedTotalSupply) } )
     
-          expect(burnReceipt.gasUsed, "burn gas fee").to.satisfy( function(gas: number) {
-            return ((gas==169239) || (gas==128423));
-          })
+        // Check the (inconsistent) gas fee
+        expect(burnReceipt.gasUsed, "burn gas fee").to.satisfy( 
+          function(gas: number) { return ((gas==169239) || (gas==128423)); })
     
         // Check that the fee receiver (account set to platformFeeTo) received the fees
         expect(await pair.balanceOf(other.address), "Fee receiver balance").to.satisfy( 
