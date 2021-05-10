@@ -627,8 +627,7 @@ describe('UniswapV2Pair', () => {
           function(gas: number) { return ((gas==169239) || (gas==128423)); })
     
         // Check that the fee receiver (account set to platformFeeTo) received the fees
-        expect(await pair.balanceOf(other.address), "Fee receiver balance").to.satisfy( 
-          function(a:BigNumber) { return closeTo(a, expectedPlatformFee) } )
+        expect(await pair.balanceOf(other.address), "Fee receiver balance").to.eq( expectedPlatformFee )
     
         // using 1000 here instead of the symbolic MINIMUM_LIQUIDITY because the amounts only happen to be equal...
         // ...because the initial liquidity amounts were equal
