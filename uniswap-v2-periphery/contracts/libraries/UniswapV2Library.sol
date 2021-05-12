@@ -23,7 +23,7 @@ library UniswapV2Library {
                 keccak256(abi.encodePacked(token0, token1)),
 
                 // Updated hard-coded hash for current UniswapV2Pair
-                hex'4131d63b6c526a67156822f613cae3089e63afcc285ea29aa118bc5e6d55810b'
+                hex'd89805c80f37f75dfb6e05024825f97e19a2c6eb13b0a0201ef654f2d3bce3e9'
             ))));
     }
 
