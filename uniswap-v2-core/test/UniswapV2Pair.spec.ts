@@ -27,12 +27,14 @@ describe('UniswapV2Pair', () => {
   let factory: Contract
   let token0: Contract
   let token1: Contract
+  let token2: Contract
   let pair: Contract
   beforeEach(async () => {
     const fixture = await loadFixture(pairFixture)
     factory = fixture.factory
     token0 = fixture.token0
     token1 = fixture.token1
+    token2 = fixture.token2
     pair = fixture.pair
   })
 
@@ -436,5 +438,63 @@ describe('UniswapV2Pair', () => {
     // ...because the initial liquidity amounts were equal
     expect(await token0.balanceOf(pair.address), "Token 0 balance of pair").to.eq(bigNumberify(1000).add(token0ExpBalVexchange))
     expect(await token1.balanceOf(pair.address), "Token 1 balance of pair").to.eq(bigNumberify(1000).add(token1ExpBalVexchange))
+  })
+
+
+  /**
+   *  recoverToken - error handling for invalid tokens 
+   */
+  it('recoverToken:invalidToken', async () => {
+    await expect(pair.recoverToken(token0.address)).to.be.revertedWith('Vexchange: INVALID_TOKEN_TO_RECOVER')
+    await expect(pair.recoverToken(token1.address)).to.be.revertedWith('Vexchange: INVALID_TOKEN_TO_RECOVER')
+  
+    // address is a random invalid token address
+    await expect(pair.recoverToken("0x3704E657053C02411aA2Fd0599e75C3d817F81BC")).to.be.reverted
+  })
+
+  /**
+   *  recoverToken - failure when recoverer is AddressZero or not set
+   *  Or when the token address is not a valid ERC20 address
+   */
+  it('recoverToken:AddressZero', async () => {
+    
+    // recoverer should be AddressZero by default
+    expect(await pair.recoverer()).to.eq(AddressZero)
+    await expect(pair.recoverToken(AddressZero)).to.be.revertedWith('Vexchange: RECOVERER_ZERO_ADDRESS')
+
+    let recoveryAddress = other.address
+    await factory.setRecovererForPair(pair.address, recoveryAddress)
+    expect(await pair.recoverer()).to.eq(recoveryAddress);
+  })
+
+  /**
+   *  recoverToken - when there are no tokens to be recovered
+   */
+  it('recoverToken:noAmount', async () => {
+    let recoveryAddress = other.address
+    
+    // There should not be any token of the kind to be recovered
+    // in the recoverer's account
+    expect(await token2.balanceOf(recoveryAddress)).to.be.eq(0)
+    await factory.setRecovererForPair(pair.address, recoveryAddress)
+    expect(await token2.balanceOf(recoveryAddress)).to.eq(0)
+  })
+
+  /**
+   *  recoverToken - normal use case
+   */
+  it('recoverToken:base' , async () => {
+    const token2Amount = expandTo18Decimals(3)
+    await token2.transfer(pair.address, token2Amount)
+    expect(await token2.balanceOf(pair.address)).to.eq(token2Amount)
+    
+    let recoveryAddress = other.address
+    await factory.setRecovererForPair(pair.address, recoveryAddress)
+    await pair.recoverToken(token2.address)
+
+    // All token2 should be drained from the pair 
+    // and be transferred to the recoveryAddress
+    expect(await token2.balanceOf(pair.address)).to.eq(0)
+    expect(await token2.balanceOf(recoveryAddress)).to.eq(token2Amount)
   })
 })
