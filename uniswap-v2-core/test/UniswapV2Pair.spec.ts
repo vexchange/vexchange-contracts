@@ -647,4 +647,45 @@ describe('UniswapV2Pair', () => {
           function(a:BigNumber) { return closeTo(a, bigNumberify(1000).add(token1ExpBalVexchange)) } )
       })
     })
+
+  /**
+   * basicOverflow
+   * 
+   * Testing mint and swap handling of an overflow balance (> max-uint-112).
+   */
+  it('basicOverflow', async () => {
+    const platformFee : BigNumber = bigNumberify( 2500 )
+
+    // Ensure the platform fee is set
+    await factory.setPlatformFeeForPair( pair.address, platformFee );
+    await factory.setPlatformFeeTo(other.address)
+
+    // Setup minimum liquidity
+    const initial0Amount = MINIMUM_LIQUIDITY.add(1)
+    const initial1Amount = MINIMUM_LIQUIDITY.add(1)
+    await addLiquidity(initial0Amount, initial1Amount)
+
+    const expectedInitalLiquidity = MINIMUM_LIQUIDITY.add(1)
+    expect(await pair.totalSupply(), "Initial total supply").to.eq(expectedInitalLiquidity)
+
+    // Add a lot more - taking us to the limit
+    const token0Amount = MAX_UINT_112.sub(initial0Amount)
+    const token1Amount = MAX_UINT_112.sub(initial1Amount)
+    await addLiquidity(token0Amount, token1Amount)
+
+    // Confirm liquidity is established
+    const expectedLiquidity = MAX_UINT_112 // geometric mean of token0Amount and token1Amount (equal, so can use one)
+    expect(await pair.totalSupply(), "Second stage total supply").to.eq(expectedLiquidity)
+
+    // Confirm we cannot add even just another little wafer ... expect an overflow revert.
+    await token0.transfer(pair.address, bigNumberify(1))
+    await token1.transfer(pair.address, bigNumberify(1))
+    await expect( pair.mint(wallet.address, overrides), 'mint with too much balance' ).to.be.revertedWith( 'UniswapV2: OVERFLOW' )
+
+    // Reconfirm established liquidity
+    expect(await pair.totalSupply(), "Total supply post failed mint").to.eq(expectedLiquidity)
+
+    // Also try and swap the wafer
+    await expect( pair.swap(bigNumberify(1), 0, wallet.address, '0x', overrides), 'swap with too much balance').to.be.revertedWith( 'UniswapV2: OVERFLOW' )
+  })
 })
