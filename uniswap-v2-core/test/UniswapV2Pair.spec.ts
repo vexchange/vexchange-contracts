@@ -3,7 +3,7 @@ import {Contract, constants} from 'ethers'
 import { solidity, MockProvider, createFixtureLoader } from 'ethereum-waffle'
 import { BigNumber, bigNumberify, SupportedAlgorithms } from 'ethers/utils'
 
-import { expandTo18Decimals, mineBlock, encodePrice, MAX_UINT_64, MAX_UINT_112, bigNumberSqrt, closeTo } from './shared/utilities'
+import { expandTo18Decimals, mineBlock, encodePrice, MAX_UINT_256, MAX_UINT_128, MAX_UINT_112, bigNumberSqrt, closeTo } from './shared/utilities'
 import { pairFixture } from './shared/fixtures'
 import { AddressZero } from 'ethers/constants'
 
@@ -466,15 +466,21 @@ describe('UniswapV2Pair', () => {
     const pairSqrtInvariantNew: BigNumber = bigNumberSqrt( aNewToken0Balance.mul(aNewToken1Balance) )
 
     // Assertions made but not enforced by Pair contract
-    assert( pairSqrtInvariantOriginal.lt( bigNumberify(2).pow(112) ), 'pairSqrtINvariantOriginal < 112bit' )
-    assert( pairSqrtInvariantNew.lt( bigNumberify(2).pow(112) ), 'pairSqrtInvariantNew < 112bit' )
-    assert( aPlatformFee.lt( FEE_ACCURACY ), 'platformFee < FeeAccuracy' )
-    assert( lTotalSupply.lt( bigNumberify(2).pow(112) ), 'totalSupply < 112bit' )
+    expect( pairSqrtInvariantOriginal, 'pairSqrtINvariantOriginal < 112bit' ).to.lte(MAX_UINT_112)
+    expect( pairSqrtInvariantNew, 'pairSqrtInvariantNew < 112bit' ).to.lte(MAX_UINT_112)
+    expect( aPlatformFee, 'platformFee < FeeAccuracy' ).to.lte(FEE_ACCURACY)
+    expect( lTotalSupply, 'totalSupply < 112bit' ).to.lte(MAX_UINT_112)
 
     // The algorithm from UniswapV2Pair _calcFee
     const lScaledGrowth = pairSqrtInvariantNew.mul(ACCURACY).div(pairSqrtInvariantOriginal)
+    expect( lScaledGrowth, 'scaled-growth < 256bit' ).to.lte( MAX_UINT_256 )
+
     const lScaledMultiplier = ACCURACY.sub( ACCURACY_SQRD.div( lScaledGrowth ) )
+    expect( lScaledMultiplier, 'scaled-multiplier < 128bit' ).to.lte( MAX_UINT_128 )
+
     const lScaledTargetOwnership = lScaledMultiplier.mul( aPlatformFee ).div( FEE_ACCURACY )
+    expect( lScaledTargetOwnership, 'scaled-tTarget-ownership < 128bit' ).to.lte( MAX_UINT_128 )
+
     const resultantFee = lScaledTargetOwnership.mul(lTotalSupply).div(ACCURACY.sub(lScaledTargetOwnership)); 
 
     return resultantFee 

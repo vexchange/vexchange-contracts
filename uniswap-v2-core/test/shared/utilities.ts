@@ -19,7 +19,7 @@ export const MAX_UINT_64: BigNumber = bigNumberify(2).pow(64).sub(1);
 export const MAX_UINT_100: BigNumber = bigNumberify(2).pow(100).sub(1);
 export const MAX_UINT_112: BigNumber = bigNumberify(2).pow(112).sub(1);
 export const MAX_UINT_114: BigNumber = bigNumberify(2).pow(114).sub(1);
-export const MAX_UINT_128: BigNumber = bigNumberify(2).pow(114).sub(1);
+export const MAX_UINT_128: BigNumber = bigNumberify(2).pow(128).sub(1);
 export const MAX_UINT_256: BigNumber = MaxUint256
 
 export function expandTo18Decimals(n: number): BigNumber {
