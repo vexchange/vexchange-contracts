@@ -444,7 +444,7 @@ describe('UniswapV2Pair', () => {
    *  recoverToken - error handling for invalid tokens 
    */
   it('recoverToken:invalidToken', async () => {
-    let recoveryAddress = other.address
+    const recoveryAddress = other.address
     await factory.setRecovererForPair(pair.address, recoveryAddress)
 
     await expect(pair.recoverToken(token0.address)).to.be.revertedWith('Vexchange: INVALID_TOKEN_TO_RECOVER')
@@ -476,7 +476,7 @@ describe('UniswapV2Pair', () => {
    *  recoverToken - when there are no tokens to be recovered
    */
   it('recoverToken:noAmount', async () => {
-    let recoveryAddress = other.address
+    const recoveryAddress = other.address
     
     // There should not be any token of the kind to be recovered
     // in the recoverer's account
@@ -494,7 +494,7 @@ describe('UniswapV2Pair', () => {
     await token2.transfer(pair.address, token2Amount)
     expect(await token2.balanceOf(pair.address)).to.eq(token2Amount)
     
-    let recoveryAddress = other.address
+    const recoveryAddress = other.address
     await factory.setRecovererForPair(pair.address, recoveryAddress)
     await pair.recoverToken(token2.address)
 
