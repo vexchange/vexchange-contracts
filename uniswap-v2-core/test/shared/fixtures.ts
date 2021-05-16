@@ -32,6 +32,7 @@ export async function factoryFixture(_: Web3Provider, [wallet]: Wallet[]): Promi
 interface PairFixture extends FactoryFixture {
   token0: Contract
   token1: Contract
+  token2: Contract
   pair: Contract
 }
 
@@ -44,6 +45,7 @@ export async function pairFixture(provider: Web3Provider, [wallet]: Wallet[]): P
 
   const tokenA = await deployContract(wallet, ERC20, [tokenSupply], overrides)
   const tokenB = await deployContract(wallet, ERC20, [tokenSupply], overrides)
+  const tokenC = await deployContract(wallet, ERC20, [tokenSupply], overrides)
 
   await factory.createPair(tokenA.address, tokenB.address, overrides)
   const pairAddress = await factory.getPair(tokenA.address, tokenB.address)
@@ -52,6 +54,7 @@ export async function pairFixture(provider: Web3Provider, [wallet]: Wallet[]): P
   const token0Address = (await pair.token0()).address
   const token0 = tokenA.address === token0Address ? tokenA : tokenB
   const token1 = tokenA.address === token0Address ? tokenB : tokenA
+  const token2 = tokenC
 
-  return { factory, defaultSwapFee, defaultPlatformFee, token0, token1, pair }
+  return { factory, defaultSwapFee, defaultPlatformFee, token0, token1, token2, pair }
 }
