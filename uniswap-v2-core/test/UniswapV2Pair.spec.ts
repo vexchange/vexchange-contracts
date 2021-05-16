@@ -691,7 +691,8 @@ describe('UniswapV2Pair', () => {
     await expect( pair.swap(bigNumberify(1), 0, wallet.address, '0x', overrides), 'swap with too much balance').to.be.revertedWith( 'UniswapV2: OVERFLOW' )
   })
   
-     *  recoverToken - error handling for invalid tokens 
+  /**
+    *  recoverToken - error handling for invalid tokens 
    */
   it('recoverToken:invalidToken', async () => {
     const recoveryAddress = other.address
