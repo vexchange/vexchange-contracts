@@ -76,7 +76,7 @@ describe('UniswapV2Factory', () => {
     // Expected init-code (hard coded value is used in dependent modules as a gas optimisation, so also verified here).
     // Note: changing the hard-coded expected init-code value implies you will need to also update the dependency.
     // See dependency @ uniswap-v2-periphery/contracts/libraries/UniswapV2Library.sol
-    expect(initCode, "UniswapV2Pair init-code").to.eq('0xd89805c80f37f75dfb6e05024825f97e19a2c6eb13b0a0201ef654f2d3bce3e9')
+    expect(initCode, "UniswapV2Pair init-code").to.eq('0x415ca5c68ac816de2dc9df6d0afcc286aec6d68d988e1c1f1cb2f0bade6ec617')
   })
 
   it('createPair:reverse', async () => {
