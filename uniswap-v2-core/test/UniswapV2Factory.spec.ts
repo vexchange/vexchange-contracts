@@ -52,8 +52,8 @@ describe('UniswapV2Factory', () => {
       .to.emit(factory, 'PairCreated')
       .withArgs(TEST_ADDRESSES[0], TEST_ADDRESSES[1], create2Address, bigNumberify(1), expectedDefaultSwapFee, expectedDefaultPlatformFee)
 
-    await expect(factory.createPair(...tokens)).to.be.reverted // UniswapV2: PAIR_EXISTS
-    await expect(factory.createPair(...tokens.slice().reverse())).to.be.reverted // UniswapV2: PAIR_EXISTS
+    await expect(factory.createPair(...tokens)).to.be.reverted // VexchangeV2: PAIR_EXISTS
+    await expect(factory.createPair(...tokens.slice().reverse())).to.be.reverted // VexchangeV2: PAIR_EXISTS
     expect(await factory.getPair(...tokens)).to.eq(create2Address)
     expect(await factory.getPair(...tokens.slice().reverse())).to.eq(create2Address)
     expect(await factory.allPairs(0)).to.eq(create2Address)
