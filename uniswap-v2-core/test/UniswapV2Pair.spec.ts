@@ -86,7 +86,7 @@ describe('UniswapV2Pair', () => {
       await addLiquidity(token0Amount, token1Amount)
       await token0.transfer(pair.address, swapAmount)
       await expect(pair.swap(0, expectedOutputAmount.add(1), wallet.address, '0x', overrides)).to.be.revertedWith(
-        'UniswapV2: K'
+        'VexchangeV2: K'
       )
       await pair.swap(0, expectedOutputAmount, wallet.address, '0x', overrides)
     })
@@ -111,7 +111,7 @@ describe('UniswapV2Pair', () => {
       await addLiquidity(token0Amount, token1Amount)
       await token0.transfer(pair.address, inputAmount)
       await expect(pair.swap(outputAmount.add(1), 0, wallet.address, '0x', overrides)).to.be.revertedWith(
-        'UniswapV2: K'
+        'VexchangeV2: K'
       )
       await pair.swap(outputAmount, 0, wallet.address, '0x', overrides)
     })
@@ -682,13 +682,13 @@ describe('UniswapV2Pair', () => {
     // Confirm we cannot add even just another little wafer ... expect an overflow revert.
     await token0.transfer(pair.address, bigNumberify(1))
     await token1.transfer(pair.address, bigNumberify(1))
-    await expect( pair.mint(wallet.address, overrides), 'mint with too much balance' ).to.be.revertedWith( 'UniswapV2: OVERFLOW' )
+    await expect( pair.mint(wallet.address, overrides), 'mint with too much balance' ).to.be.revertedWith( 'VexchangeV2: OVERFLOW' )
 
     // Reconfirm established liquidity
     expect(await pair.totalSupply(), "Total supply post failed mint").to.eq(expectedLiquidity)
 
     // Also try and swap the wafer
-    await expect( pair.swap(bigNumberify(1), 0, wallet.address, '0x', overrides), 'swap with too much balance').to.be.revertedWith( 'UniswapV2: OVERFLOW' )
+    await expect( pair.swap(bigNumberify(1), 0, wallet.address, '0x', overrides), 'swap with too much balance').to.be.revertedWith( 'VexchangeV2: OVERFLOW' )
   })
   
   /**
@@ -698,8 +698,8 @@ describe('UniswapV2Pair', () => {
     const recoveryAddress = other.address
     await factory.setRecovererForPair(pair.address, recoveryAddress)
 
-    await expect(pair.recoverToken(token0.address)).to.be.revertedWith('Vexchange: INVALID_TOKEN_TO_RECOVER')
-    await expect(pair.recoverToken(token1.address)).to.be.revertedWith('Vexchange: INVALID_TOKEN_TO_RECOVER')  
+    await expect(pair.recoverToken(token0.address)).to.be.revertedWith('VexchangeV2: INVALID_TOKEN_TO_RECOVER')
+    await expect(pair.recoverToken(token1.address)).to.be.revertedWith('VexchangeV2: INVALID_TOKEN_TO_RECOVER')  
     
     const invalidTokenAddress = "0x3704E657053C02411aA2Fd0599e75C3d817F81BC"
     await expect(pair.recoverToken(invalidTokenAddress)).to.be.reverted
@@ -712,7 +712,7 @@ describe('UniswapV2Pair', () => {
     
     // recoverer should be AddressZero by default
     expect(await pair.recoverer()).to.eq(AddressZero)
-    await expect(pair.recoverToken(token2.address)).to.be.revertedWith('Vexchange: RECOVERER_ZERO_ADDRESS')
+    await expect(pair.recoverToken(token2.address)).to.be.revertedWith('VexchangeV2: RECOVERER_ZERO_ADDRESS')
 
     // Transfer some token2 to pair address  
     const token2Amount = expandTo18Decimals(3)
@@ -720,7 +720,7 @@ describe('UniswapV2Pair', () => {
     expect(await token2.balanceOf(pair.address)).to.eq(token2Amount)
 
     // recoverToken should still fail
-    await expect(pair.recoverToken(token2.address)).to.be.revertedWith('Vexchange: RECOVERER_ZERO_ADDRESS')
+    await expect(pair.recoverToken(token2.address)).to.be.revertedWith('VexchangeV2: RECOVERER_ZERO_ADDRESS')
   })
 
   /**
