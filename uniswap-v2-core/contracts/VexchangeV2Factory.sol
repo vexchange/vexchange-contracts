@@ -1,10 +1,10 @@
 pragma solidity =0.5.16;
 
-import './interfaces/IUniswapV2Factory.sol';
-import './UniswapV2Pair.sol';
+import './interfaces/IVexchangeV2Factory.sol';
+import './VexchangeV2Pair.sol';
 import './libraries/Ownable.sol';
 
-contract UniswapV2Factory is IUniswapV2Factory, Ownable {
+contract VexchangeV2Factory is IVexchangeV2Factory, Ownable {
     uint public constant MAX_PLATFORM_FEE = 5000;   // 50.00%
     uint public constant MIN_SWAP_FEE     = 5;      //  0.05%
     uint public constant MAX_SWAP_FEE     = 200;    //  2.00%
@@ -39,12 +39,12 @@ contract UniswapV2Factory is IUniswapV2Factory, Ownable {
         (address token0, address token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
         require(token0 != address(0), 'VexchangeV2: ZERO_ADDRESS');
         require(getPair[token0][token1] == address(0), 'VexchangeV2: PAIR_EXISTS'); // single check is sufficient
-        bytes memory bytecode = type(UniswapV2Pair).creationCode;
+        bytes memory bytecode = type(VexchangeV2Pair).creationCode;
         bytes32 salt = keccak256(abi.encodePacked(token0, token1));
         assembly {
             pair := create2(0, add(bytecode, 32), mload(bytecode), salt)
         }
-        IUniswapV2Pair(pair).initialize(token0, token1, defaultSwapFee, defaultPlatformFee);
+        IVexchangeV2Pair(pair).initialize(token0, token1, defaultSwapFee, defaultPlatformFee);
         getPair[token0][token1] = pair;
         getPair[token1][token0] = pair; // populate mapping in the reverse direction
         allPairs.push(pair);
@@ -52,7 +52,7 @@ contract UniswapV2Factory is IUniswapV2Factory, Ownable {
     }
 
     function getPairInitHash() public pure returns(bytes32){
-        bytes memory rawInitCode = type(UniswapV2Pair).creationCode;
+        bytes memory rawInitCode = type(VexchangeV2Pair).creationCode;
         return keccak256(abi.encodePacked(rawInitCode));
     }
 
@@ -86,14 +86,14 @@ contract UniswapV2Factory is IUniswapV2Factory, Ownable {
     }
     
     function setSwapFeeForPair(address _pair, uint _swapFee) external onlyOwner {
-        IUniswapV2Pair(_pair).setSwapFee(_swapFee);
+        IVexchangeV2Pair(_pair).setSwapFee(_swapFee);
     }
     
     function setPlatformFeeForPair(address _pair, uint _platformFee) external onlyOwner {
-        IUniswapV2Pair(_pair).setPlatformFee(_platformFee);
+        IVexchangeV2Pair(_pair).setPlatformFee(_platformFee);
     }
     
     function setRecovererForPair(address _pair, address _recoverer) external onlyOwner {
-        IUniswapV2Pair(_pair).setRecoverer(_recoverer);
+        IVexchangeV2Pair(_pair).setRecoverer(_recoverer);
     }
 }

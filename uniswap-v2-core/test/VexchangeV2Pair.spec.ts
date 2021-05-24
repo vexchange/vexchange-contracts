@@ -15,7 +15,7 @@ const overrides = {
   gasLimit: 9999999
 }
 
-describe('UniswapV2Pair', () => {
+describe('VexchangeV2Pair', () => {
   const provider = new MockProvider({
     hardfork: 'constantinople',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
@@ -420,7 +420,7 @@ describe('UniswapV2Pair', () => {
     // Check that the fee receiver (account set to platformFeeTo) received the fees
     expect(await pair.balanceOf(other.address), "Fee receiver balance").to.eq(expectedPlatformFee)
 
-    // The (inverted) target max variance of 0.02% of Vexchange platform fee to UniswapV2.
+    // The (inverted) target max variance of 0.02% of Vexchange platform fee to VexchangeV2.
     // This variance is due to the max-precision of the platform fee and fee-pricing algorithm; inverted due to integer division math.
     const targetInverseVariance: number = 5000;
 
@@ -428,16 +428,16 @@ describe('UniswapV2Pair', () => {
     const minInverseVariance: number = targetInverseVariance * 0.95;
     const maxInverseVariance: number = targetInverseVariance * 1.05;
 
-    // Compare 1/6 uniswapV2 fee, using 0.1667 Vexchange Platform fee: run check to confirm ~ 0.02% variance.
-    const token0ExpBalUniswapV2: BigNumber = bigNumberify( '249501683697445' )
+    // Compare 1/6 vexchangeV2 fee, using 0.1667 Vexchange Platform fee: run check to confirm ~ 0.02% variance.
+    const token0ExpBalVexchangeV2: BigNumber = bigNumberify( '249501683697445' )
     const token0ExpBalVexchange: BigNumber = bigNumberify( '249551584034184' )
-    const token0Variance: number = token0ExpBalUniswapV2.div(token0ExpBalVexchange.sub(token0ExpBalUniswapV2)).toNumber();
+    const token0Variance: number = token0ExpBalVexchangeV2.div(token0ExpBalVexchange.sub(token0ExpBalVexchangeV2)).toNumber();
     expect(token0Variance, "token 0 variance from uniswap v2 fee" ).to.be.within(minInverseVariance, maxInverseVariance)
 
-    // Compare 1/6 uniswapV2 fee, using 0.1667 Vexchange Platform fee: run check to confirm ~ 0.02% variance.
-    const token1ExpBalUniswapV2: BigNumber = bigNumberify( '250000187312969' )
+    // Compare 1/6 vexchangeV2 fee, using 0.1667 Vexchange Platform fee: run check to confirm ~ 0.02% variance.
+    const token1ExpBalVexchangeV2: BigNumber = bigNumberify( '250000187312969' )
     const token1ExpBalVexchange: BigNumber = bigNumberify( '250050187350431' )
-    const token1Variance: number = token1ExpBalUniswapV2.div(token1ExpBalVexchange.sub(token1ExpBalUniswapV2)).toNumber();
+    const token1Variance: number = token1ExpBalVexchangeV2.div(token1ExpBalVexchange.sub(token1ExpBalVexchangeV2)).toNumber();
     expect(token1Variance, "token 1 variance from uniswap v2 fee" ).to.be.within(minInverseVariance, maxInverseVariance)
 
     // using 1000 here instead of the symbolic MINIMUM_LIQUIDITY because the amounts only happen to be equal...
@@ -456,7 +456,7 @@ describe('UniswapV2Pair', () => {
                             aToken0Balance: BigNumber, aToken1Balance: BigNumber,
                             aNewToken0Balance: BigNumber, aNewToken1Balance: BigNumber ) : BigNumber
   {
-    // Constants from UniswapV2Pair _calcFee
+    // Constants from VexchangeV2Pair _calcFee
     const ACCURACY_SQRD : BigNumber = bigNumberify('10000000000000000000000000000000000000000000000000000000000000000000000000000')
     const ACCURACY      : BigNumber = bigNumberify('100000000000000000000000000000000000000')
     const FEE_ACCURACY  : BigNumber = bigNumberify(10000)
@@ -473,7 +473,7 @@ describe('UniswapV2Pair', () => {
     expect( aPlatformFee, 'platformFee < FeeAccuracy' ).to.lte(FEE_ACCURACY)
     expect( lTotalSupply, 'totalSupply < 112bit' ).to.lte(MAX_UINT_112)
 
-    // The algorithm from UniswapV2Pair _calcFee
+    // The algorithm from VexchangeV2Pair _calcFee
     const lScaledGrowth = pairSqrtInvariantNew.mul(ACCURACY).div(pairSqrtInvariantOriginal)
     expect( lScaledGrowth, 'scaled-growth < 256bit' ).to.lte( MAX_UINT_256 )
 

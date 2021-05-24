@@ -7,7 +7,7 @@ import { solidity, MockProvider, createFixtureLoader } from 'ethereum-waffle'
 import { getCreate2Address } from './shared/utilities'
 import { factoryFixture } from './shared/fixtures'
 
-import UniswapV2Pair from '../build/UniswapV2Pair.json'
+import VexchangeV2Pair from '../build/VexchangeV2Pair.json'
 
 chai.use(solidity)
 
@@ -16,7 +16,7 @@ const TEST_ADDRESSES: [string, string] = [
   '0x2000000000000000000000000000000000000000'
 ]
 
-describe('UniswapV2Factory', () => {
+describe('VexchangeV2Factory', () => {
   const provider = new MockProvider({
     hardfork: 'constantinople',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
@@ -46,7 +46,7 @@ describe('UniswapV2Factory', () => {
   })
 
   async function createPair(tokens: [string, string]) {
-    const bytecode = `0x${UniswapV2Pair.evm.bytecode.object}`
+    const bytecode = `0x${VexchangeV2Pair.evm.bytecode.object}`
     const create2Address = getCreate2Address(factory.address, tokens, bytecode)
     await expect(factory.createPair(...tokens))
       .to.emit(factory, 'PairCreated')
@@ -59,7 +59,7 @@ describe('UniswapV2Factory', () => {
     expect(await factory.allPairs(0)).to.eq(create2Address)
     expect(await factory.allPairsLength()).to.eq(1)
 
-    const pair = new Contract(create2Address, JSON.stringify(UniswapV2Pair.abi), provider)
+    const pair = new Contract(create2Address, JSON.stringify(VexchangeV2Pair.abi), provider)
     expect(await pair.factory()).to.eq(factory.address)
     expect(await pair.token0()).to.eq(TEST_ADDRESSES[0])
     expect(await pair.token1()).to.eq(TEST_ADDRESSES[1])
@@ -70,13 +70,13 @@ describe('UniswapV2Factory', () => {
   })
 
   it('retreivePairInitCode', async () => {
-    // Retrieve the UniswapV2Pair init-code from the factory
+    // Retrieve the VexchangeV2Pair init-code from the factory
     const initCode: BigNumber =  await factory.getPairInitHash()
 
     // Expected init-code (hard coded value is used in dependent modules as a gas optimisation, so also verified here).
     // Note: changing the hard-coded expected init-code value implies you will need to also update the dependency.
-    // See dependency @ uniswap-v2-periphery/contracts/libraries/UniswapV2Library.sol
-    expect(initCode, "UniswapV2Pair init-code").to.eq('0x415ca5c68ac816de2dc9df6d0afcc286aec6d68d988e1c1f1cb2f0bade6ec617')
+    // See dependency @ uniswap-v2-periphery/contracts/libraries/VexchangeV2Library.sol
+    expect(initCode, "VexchangeV2Pair init-code").to.eq('0x7e79aabe2533ac4a6df68a11c9e5389d4c11e8bec064a048ef999b7912cbb168')
   })
 
   it('createPair:reverse', async () => {

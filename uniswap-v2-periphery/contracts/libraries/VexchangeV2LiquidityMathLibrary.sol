@@ -1,16 +1,16 @@
 pragma solidity >=0.5.0;
 
-import '../ext-v2-core/IUniswapV2Pair.sol';
-import '../ext-v2-core/IUniswapV2Factory.sol';
+import '../ext-v2-core/IVexchangeV2Pair.sol';
+import '../ext-v2-core/IVexchangeV2Factory.sol';
 import '../ext-lib/Babylonian.sol';
 import '../ext-lib/FullMath.sol';
 
 import './SafeMath.sol';
-import './UniswapV2Library.sol';
+import './VexchangeV2Library.sol';
 
 // library containing some math for dealing with the liquidity shares of a pair, e.g. computing their exact value
 // in terms of the underlying tokens
-library UniswapV2LiquidityMathLibrary {
+library VexchangeV2LiquidityMathLibrary {
     using SafeMath for uint256;
 
     // computes the direction and magnitude of the profit-maximizing trade
@@ -48,9 +48,9 @@ library UniswapV2LiquidityMathLibrary {
         uint256 truePriceTokenB
     ) view internal returns (uint256 reserveA, uint256 reserveB) {
         // first get reserves before the swap
-        (reserveA, reserveB) = UniswapV2Library.getReserves(factory, tokenA, tokenB);
+        (reserveA, reserveB) = VexchangeV2Library.getReserves(factory, tokenA, tokenB);
 
-        require(reserveA > 0 && reserveB > 0, 'UniswapV2ArbitrageLibrary: ZERO_PAIR_RESERVES');
+        require(reserveA > 0 && reserveB > 0, 'VexchangeV2ArbitrageLibrary: ZERO_PAIR_RESERVES');
 
         // then compute how much to swap to arb to the true price
         (bool aToB, uint256 amountIn) = computeProfitMaximizingTrade(truePriceTokenA, truePriceTokenB, reserveA, reserveB);
@@ -61,11 +61,11 @@ library UniswapV2LiquidityMathLibrary {
 
         // now affect the trade to the reserves
         if (aToB) {
-            uint amountOut = UniswapV2Library.getAmountOut(amountIn, reserveA, reserveB);
+            uint amountOut = VexchangeV2Library.getAmountOut(amountIn, reserveA, reserveB);
             reserveA += amountIn;
             reserveB -= amountOut;
         } else {
-            uint amountOut = UniswapV2Library.getAmountOut(amountIn, reserveB, reserveA);
+            uint amountOut = VexchangeV2Library.getAmountOut(amountIn, reserveB, reserveA);
             reserveB += amountIn;
             reserveA -= amountOut;
         }
@@ -103,8 +103,8 @@ library UniswapV2LiquidityMathLibrary {
         address tokenB,
         uint256 liquidityAmount
     ) internal view returns (uint256 tokenAAmount, uint256 tokenBAmount) {
-        (uint256 reservesA, uint256 reservesB) = UniswapV2Library.getReserves(factory, tokenA, tokenB);
-        IUniswapV2Pair pair = IUniswapV2Pair(UniswapV2Library.pairFor(factory, tokenA, tokenB));
+        (uint256 reservesA, uint256 reservesB) = VexchangeV2Library.getReserves(factory, tokenA, tokenB);
+        IVexchangeV2Pair pair = IVexchangeV2Pair(VexchangeV2Library.pairFor(factory, tokenA, tokenB));
 
         bool feeOn = pair.platformFeeOn();
         uint kLast = feeOn ? pair.kLast() : 0;
@@ -125,7 +125,7 @@ library UniswapV2LiquidityMathLibrary {
         uint256 tokenAAmount,
         uint256 tokenBAmount
     ) {        
-        IUniswapV2Pair pair = IUniswapV2Pair(UniswapV2Library.pairFor(factory, tokenA, tokenB));
+        IVexchangeV2Pair pair = IVexchangeV2Pair(VexchangeV2Library.pairFor(factory, tokenA, tokenB));
         bool feeOn = pair.platformFeeOn();
         uint kLast = feeOn ? pair.kLast() : 0;
         uint totalSupply = pair.totalSupply();

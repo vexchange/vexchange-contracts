@@ -6,8 +6,8 @@ import { deployContract } from 'ethereum-waffle'
 import { expandTo18Decimals, MAX_UINT_128 } from './utilities'
 
 import ERC20 from '../../build/ERC20.json'
-import UniswapV2Factory from '../../build/UniswapV2Factory.json'
-import UniswapV2Pair from '../../build/UniswapV2Pair.json'
+import VexchangeV2Factory from '../../build/VexchangeV2Factory.json'
+import VexchangeV2Pair from '../../build/VexchangeV2Pair.json'
 
 interface FactoryFixture {
   factory: Contract
@@ -25,7 +25,7 @@ export async function factoryFixture(_: Web3Provider, [wallet]: Wallet[]): Promi
   const defaultSwapFee: BigNumber = bigNumberify(30)
   const defaultPlatformFee: BigNumber = bigNumberify(0)
 
-  const factory = await deployContract(wallet, UniswapV2Factory, [defaultSwapFee, defaultPlatformFee, wallet.address], overrides)
+  const factory = await deployContract(wallet, VexchangeV2Factory, [defaultSwapFee, defaultPlatformFee, wallet.address], overrides)
   return { factory, defaultSwapFee, defaultPlatformFee }
 }
 
@@ -39,7 +39,7 @@ interface PairFixture extends FactoryFixture {
 export async function pairFixture(provider: Web3Provider, [wallet]: Wallet[]): Promise<PairFixture> {
   const { factory, defaultSwapFee, defaultPlatformFee } = await factoryFixture(provider, [wallet])
 
-  // Setup initial liquidity of pair's tokens; 10000 x 10^8  originally used in uniswapV2 tests, this
+  // Setup initial liquidity of pair's tokens; 10000 x 10^8  originally used in vexchangeV2 tests, this
   // is expanded for overflow testing of new platformFee tests to max-uint 128bit.
   const tokenSupply: BigNumber = MAX_UINT_128;
 
@@ -49,7 +49,7 @@ export async function pairFixture(provider: Web3Provider, [wallet]: Wallet[]): P
 
   await factory.createPair(tokenA.address, tokenB.address, overrides)
   const pairAddress = await factory.getPair(tokenA.address, tokenB.address)
-  const pair = new Contract(pairAddress, JSON.stringify(UniswapV2Pair.abi), provider).connect(wallet)
+  const pair = new Contract(pairAddress, JSON.stringify(VexchangeV2Pair.abi), provider).connect(wallet)
 
   const token0Address = (await pair.token0()).address
   const token0 = tokenA.address === token0Address ? tokenA : tokenB

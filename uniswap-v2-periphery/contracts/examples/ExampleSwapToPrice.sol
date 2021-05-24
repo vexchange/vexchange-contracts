@@ -1,22 +1,22 @@
 pragma solidity =0.6.6;
 
-import '../ext-v2-core/IUniswapV2Pair.sol';
+import '../ext-v2-core/IVexchangeV2Pair.sol';
 import '../ext-lib/Babylonian.sol';
 import '../ext-lib/TransferHelper.sol';
 
-import '../libraries/UniswapV2LiquidityMathLibrary.sol';
+import '../libraries/VexchangeV2LiquidityMathLibrary.sol';
 import '../interfaces/IERC20.sol';
-import '../interfaces/IUniswapV2Router01.sol';
+import '../interfaces/IVexchangeV2Router01.sol';
 import '../libraries/SafeMath.sol';
-import '../libraries/UniswapV2Library.sol';
+import '../libraries/VexchangeV2Library.sol';
 
 contract ExampleSwapToPrice {
     using SafeMath for uint256;
 
-    IUniswapV2Router01 public immutable router;
+    IVexchangeV2Router01 public immutable router;
     address public immutable factory;
 
-    constructor(address factory_, IUniswapV2Router01 router_) public {
+    constructor(address factory_, IVexchangeV2Router01 router_) public {
         factory = factory_;
         router = router_;
     }
@@ -42,8 +42,8 @@ contract ExampleSwapToPrice {
         bool aToB;
         uint256 amountIn;
         {
-            (uint256 reserveA, uint256 reserveB) = UniswapV2Library.getReserves(factory, tokenA, tokenB);
-            (aToB, amountIn) = UniswapV2LiquidityMathLibrary.computeProfitMaximizingTrade(
+            (uint256 reserveA, uint256 reserveB) = VexchangeV2Library.getReserves(factory, tokenA, tokenB);
+            (aToB, amountIn) = VexchangeV2LiquidityMathLibrary.computeProfitMaximizingTrade(
                 truePriceTokenA, truePriceTokenB,
                 reserveA, reserveB
             );
