@@ -93,7 +93,6 @@ contract VexchangeV2Router01 is IVexchangeV2Router01 {
         assert(IVVET(VVET).transfer(pair, amountVET));
         liquidity = IVexchangeV2Pair(pair).mint(to);
 
-        // Still applicable for VET? I think yes. msg.value still relevant 
         if (msg.value > amountVET) TransferHelper.safeTransferVET(msg.sender, msg.value - amountVET); // refund dust vet, if any
     }
 
