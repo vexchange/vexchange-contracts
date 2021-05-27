@@ -131,20 +131,20 @@ describe('fee-on-transfer tokens', () => {
   const loadFixture = createFixtureLoader(provider, [wallet])
 
   let DTT: Contract
-  let WETH: Contract
+  let VVET: Contract
   let router: Contract
   let pair: Contract
   beforeEach(async function() {
     const fixture = await loadFixture(v2Fixture)
 
-    WETH = fixture.WETH
+    VVET = fixture.VVET
     router = fixture.router02
 
     DTT = await deployContract(wallet, DeflatingERC20, [expandTo18Decimals(10000)])
 
-    // make a DTT<>WETH pair
-    await fixture.factoryV2.createPair(DTT.address, WETH.address)
-    const pairAddress = await fixture.factoryV2.getPair(DTT.address, WETH.address)
+    // make a DTT<>VVET pair
+    await fixture.factoryV2.createPair(DTT.address, VVET.address)
+    const pairAddress = await fixture.factoryV2.getPair(DTT.address, VVET.address)
     pair = new Contract(pairAddress, JSON.stringify(IVexchangeV2Pair.abi), provider).connect(wallet)
   })
 
@@ -152,44 +152,44 @@ describe('fee-on-transfer tokens', () => {
     expect(await provider.getBalance(router.address)).to.eq(0)
   })
 
-  async function addLiquidity(DTTAmount: BigNumber, WETHAmount: BigNumber) {
+  async function addLiquidity(DTTAmount: BigNumber, VVETAmount: BigNumber) {
     await DTT.approve(router.address, MaxUint256)
-    await router.addLiquidityETH(DTT.address, DTTAmount, DTTAmount, WETHAmount, wallet.address, MaxUint256, {
+    await router.addLiquidityVET(DTT.address, DTTAmount, DTTAmount, VVETAmount, wallet.address, MaxUint256, {
       ...overrides,
-      value: WETHAmount
+      value: VVETAmount
     })
   }
 
-  it('removeLiquidityETHSupportingFeeOnTransferTokens', async () => {
+  it('removeLiquidityVETSupportingFeeOnTransferTokens', async () => {
     const DTTAmount = expandTo18Decimals(1)
-    const ETHAmount = expandTo18Decimals(4)
-    await addLiquidity(DTTAmount, ETHAmount)
+    const VETAmount = expandTo18Decimals(4)
+    await addLiquidity(DTTAmount, VETAmount)
 
     const DTTInPair = await DTT.balanceOf(pair.address)
-    const WETHInPair = await WETH.balanceOf(pair.address)
+    const VVETInPair = await VVET.balanceOf(pair.address)
     const liquidity = await pair.balanceOf(wallet.address)
     const totalSupply = await pair.totalSupply()
     const NaiveDTTExpected = DTTInPair.mul(liquidity).div(totalSupply)
-    const WETHExpected = WETHInPair.mul(liquidity).div(totalSupply)
+    const VVETExpected = VVETInPair.mul(liquidity).div(totalSupply)
 
     await pair.approve(router.address, MaxUint256)
-    await router.removeLiquidityETHSupportingFeeOnTransferTokens(
+    await router.removeLiquidityVETSupportingFeeOnTransferTokens(
       DTT.address,
       liquidity,
       NaiveDTTExpected,
-      WETHExpected,
+      VVETExpected,
       wallet.address,
       MaxUint256,
       overrides
     )
   })
 
-  it('removeLiquidityETHWithPermitSupportingFeeOnTransferTokens', async () => {
+  it('removeLiquidityVETWithPermitSupportingFeeOnTransferTokens', async () => {
     const DTTAmount = expandTo18Decimals(1)
       .mul(100)
       .div(99)
-    const ETHAmount = expandTo18Decimals(4)
-    await addLiquidity(DTTAmount, ETHAmount)
+    const VETAmount = expandTo18Decimals(4)
+    await addLiquidity(DTTAmount, VETAmount)
 
     const expectedLiquidity = expandTo18Decimals(2)
 
@@ -204,18 +204,18 @@ describe('fee-on-transfer tokens', () => {
     const { v, r, s } = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(wallet.privateKey.slice(2), 'hex'))
 
     const DTTInPair = await DTT.balanceOf(pair.address)
-    const WETHInPair = await WETH.balanceOf(pair.address)
+    const VVETInPair = await VVET.balanceOf(pair.address)
     const liquidity = await pair.balanceOf(wallet.address)
     const totalSupply = await pair.totalSupply()
     const NaiveDTTExpected = DTTInPair.mul(liquidity).div(totalSupply)
-    const WETHExpected = WETHInPair.mul(liquidity).div(totalSupply)
+    const VVETExpected = VVETInPair.mul(liquidity).div(totalSupply)
 
     await pair.approve(router.address, MaxUint256)
-    await router.removeLiquidityETHWithPermitSupportingFeeOnTransferTokens(
+    await router.removeLiquidityVETWithPermitSupportingFeeOnTransferTokens(
       DTT.address,
       liquidity,
       NaiveDTTExpected,
-      WETHExpected,
+      VVETExpected,
       wallet.address,
       MaxUint256,
       false,
@@ -230,35 +230,35 @@ describe('fee-on-transfer tokens', () => {
     const DTTAmount = expandTo18Decimals(5)
       .mul(100)
       .div(99)
-    const ETHAmount = expandTo18Decimals(10)
+    const VETAmount = expandTo18Decimals(10)
     const amountIn = expandTo18Decimals(1)
 
     beforeEach(async () => {
-      await addLiquidity(DTTAmount, ETHAmount)
+      await addLiquidity(DTTAmount, VETAmount)
     })
 
-    it('DTT -> WETH', async () => {
+    it('DTT -> VVET', async () => {
       await DTT.approve(router.address, MaxUint256)
 
       await router.swapExactTokensForTokensSupportingFeeOnTransferTokens(
         amountIn,
         0,
-        [DTT.address, WETH.address],
+        [DTT.address, VVET.address],
         wallet.address,
         MaxUint256,
         overrides
       )
     })
 
-    // WETH -> DTT
-    it('WETH -> DTT', async () => {
-      await WETH.deposit({ value: amountIn }) // mint WETH
-      await WETH.approve(router.address, MaxUint256)
+    // VVET -> DTT
+    it('VVET -> DTT', async () => {
+      await VVET.deposit({ value: amountIn }) // mint VVET
+      await VVET.approve(router.address, MaxUint256)
 
       await router.swapExactTokensForTokensSupportingFeeOnTransferTokens(
         amountIn,
         0,
-        [WETH.address, DTT.address],
+        [VVET.address, DTT.address],
         wallet.address,
         MaxUint256,
         overrides
@@ -266,18 +266,18 @@ describe('fee-on-transfer tokens', () => {
     })
   })
 
-  // ETH -> DTT
-  it('swapExactETHForTokensSupportingFeeOnTransferTokens', async () => {
+  // VET -> DTT
+  it('swapExactVETForTokensSupportingFeeOnTransferTokens', async () => {
     const DTTAmount = expandTo18Decimals(10)
       .mul(100)
       .div(99)
-    const ETHAmount = expandTo18Decimals(5)
+    const VETAmount = expandTo18Decimals(5)
     const swapAmount = expandTo18Decimals(1)
-    await addLiquidity(DTTAmount, ETHAmount)
+    await addLiquidity(DTTAmount, VETAmount)
 
-    await router.swapExactETHForTokensSupportingFeeOnTransferTokens(
+    await router.swapExactVETForTokensSupportingFeeOnTransferTokens(
       0,
-      [WETH.address, DTT.address],
+      [VVET.address, DTT.address],
       wallet.address,
       MaxUint256,
       {
@@ -287,21 +287,21 @@ describe('fee-on-transfer tokens', () => {
     )
   })
 
-  // DTT -> ETH
-  it('swapExactTokensForETHSupportingFeeOnTransferTokens', async () => {
+  // DTT -> VET
+  it('swapExactTokensForVETSupportingFeeOnTransferTokens', async () => {
     const DTTAmount = expandTo18Decimals(5)
       .mul(100)
       .div(99)
-    const ETHAmount = expandTo18Decimals(10)
+    const VETAmount = expandTo18Decimals(10)
     const swapAmount = expandTo18Decimals(1)
 
-    await addLiquidity(DTTAmount, ETHAmount)
+    await addLiquidity(DTTAmount, VETAmount)
     await DTT.approve(router.address, MaxUint256)
 
-    await router.swapExactTokensForETHSupportingFeeOnTransferTokens(
+    await router.swapExactTokensForVETSupportingFeeOnTransferTokens(
       swapAmount,
       0,
-      [DTT.address, WETH.address],
+      [DTT.address, VVET.address],
       wallet.address,
       MaxUint256,
       overrides
@@ -329,7 +329,7 @@ describe('fee-on-transfer tokens: reloaded', () => {
     DTT = await deployContract(wallet, DeflatingERC20, [expandTo18Decimals(10000)])
     DTT2 = await deployContract(wallet, DeflatingERC20, [expandTo18Decimals(10000)])
 
-    // make a DTT<>WETH pair
+    // make a DTT<>VVET pair
     await fixture.factoryV2.createPair(DTT.address, DTT2.address)
     const pairAddress = await fixture.factoryV2.getPair(DTT.address, DTT2.address)
   })
