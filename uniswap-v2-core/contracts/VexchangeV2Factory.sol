@@ -24,9 +24,10 @@ contract VexchangeV2Factory is IVexchangeV2Factory, Ownable {
     event DefaultPlatformFeeChanged(uint oldDefaultPlatformFee, uint newDefaultPlatformFee);
     event DefaultRecovererChanged(address oldDefaultRecoverer, address newDefaultRecoverer);
 
-    constructor(uint _defaultSwapFee, uint _defaultPlatformFee, address _defaultRecoverer) public {
+    constructor(uint _defaultSwapFee, uint _defaultPlatformFee, address _platformFeeTo, address _defaultRecoverer) public {
         defaultSwapFee = _defaultSwapFee;
         defaultPlatformFee = _defaultPlatformFee;
+        platformFeeTo = _platformFeeTo;
         defaultRecoverer = _defaultRecoverer;
     }
 
