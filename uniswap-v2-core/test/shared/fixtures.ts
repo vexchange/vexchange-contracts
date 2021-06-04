@@ -23,7 +23,7 @@ const overrides = {
 export async function factoryFixture(_: Web3Provider, [wallet]: Wallet[]): Promise<FactoryFixture> {
   const defaultSwapFee: BigNumber = bigNumberify(30)
   const defaultPlatformFee: BigNumber = bigNumberify(0)
-  const platformFeeTo: string = "0x3000000000000000000000000000000000000000"
+  const platformFeeTo: string = '0x3000000000000000000000000000000000000000'
 
   const factory = await deployContract(wallet, VexchangeV2Factory, [defaultSwapFee, defaultPlatformFee, platformFeeTo, wallet.address], overrides)
   return { factory, defaultSwapFee, defaultPlatformFee, platformFeeTo }

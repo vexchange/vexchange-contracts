@@ -11,9 +11,8 @@ contract VexchangeV2Factory is IVexchangeV2Factory, Ownable {
 
     uint public defaultSwapFee;
     uint public defaultPlatformFee;
-    address public defaultRecoverer;
-
     address public platformFeeTo;
+    address public defaultRecoverer;
 
     mapping(address => mapping(address => address)) public getPair;
     address[] public allPairs;
@@ -25,6 +24,7 @@ contract VexchangeV2Factory is IVexchangeV2Factory, Ownable {
     event DefaultRecovererChanged(address oldDefaultRecoverer, address newDefaultRecoverer);
 
     constructor(uint _defaultSwapFee, uint _defaultPlatformFee, address _platformFeeTo, address _defaultRecoverer) public {
+        require(_platformFeeTo != address(0), 'VexchangeV2: PLATFORMFEETO_ZERO_ADDRESS');
         defaultSwapFee = _defaultSwapFee;
         defaultPlatformFee = _defaultPlatformFee;
         platformFeeTo = _platformFeeTo;
@@ -58,6 +58,7 @@ contract VexchangeV2Factory is IVexchangeV2Factory, Ownable {
     }
 
     function setPlatformFeeTo(address _platformFeeTo) external onlyOwner {
+        require(_platformFeeTo != address(0), 'VexchangeV2: PLATFORMFEETO_ZERO_ADDRESS');
         emit PlatformFeeToChanged(platformFeeTo, _platformFeeTo);
         platformFeeTo = _platformFeeTo;
     }
