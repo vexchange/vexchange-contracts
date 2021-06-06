@@ -13,7 +13,7 @@ interface FactoryFixture {
   factory: Contract
   defaultSwapFee: BigNumber
   defaultPlatformFee: BigNumber
-
+  platformFeeTo: string
 }
 
 const overrides = {
@@ -21,12 +21,12 @@ const overrides = {
 }
 
 export async function factoryFixture(_: Web3Provider, [wallet]: Wallet[]): Promise<FactoryFixture> {
-  // Initial static default - defaults to uniswap original fee structure with no 'feeTo' set.
   const defaultSwapFee: BigNumber = bigNumberify(30)
   const defaultPlatformFee: BigNumber = bigNumberify(0)
+  const platformFeeTo: string = '0x3000000000000000000000000000000000000000'
 
-  const factory = await deployContract(wallet, VexchangeV2Factory, [defaultSwapFee, defaultPlatformFee, wallet.address], overrides)
-  return { factory, defaultSwapFee, defaultPlatformFee }
+  const factory = await deployContract(wallet, VexchangeV2Factory, [defaultSwapFee, defaultPlatformFee, platformFeeTo, wallet.address], overrides)
+  return { factory, defaultSwapFee, defaultPlatformFee, platformFeeTo }
 }
 
 interface PairFixture extends FactoryFixture {
@@ -37,7 +37,7 @@ interface PairFixture extends FactoryFixture {
 }
 
 export async function pairFixture(provider: Web3Provider, [wallet]: Wallet[]): Promise<PairFixture> {
-  const { factory, defaultSwapFee, defaultPlatformFee } = await factoryFixture(provider, [wallet])
+  const { factory, defaultSwapFee, defaultPlatformFee, platformFeeTo } = await factoryFixture(provider, [wallet])
 
   // Setup initial liquidity of pair's tokens; 10000 x 10^8  originally used in vexchangeV2 tests, this
   // is expanded for overflow testing of new platformFee tests to max-uint 128bit.
@@ -56,5 +56,5 @@ export async function pairFixture(provider: Web3Provider, [wallet]: Wallet[]): P
   const token1 = tokenA.address === token0Address ? tokenB : tokenA
   const token2 = tokenC
 
-  return { factory, defaultSwapFee, defaultPlatformFee, token0, token1, token2, pair }
+  return { factory, defaultSwapFee, defaultPlatformFee, platformFeeTo, token0, token1, token2, pair }
 }

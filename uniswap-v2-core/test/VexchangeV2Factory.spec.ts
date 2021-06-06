@@ -28,6 +28,7 @@ describe('VexchangeV2Factory', () => {
   let factory: Contract
   let expectedDefaultSwapFee: BigNumber
   let expectedDefaultPlatformFee: BigNumber
+  let expectedPlatformFeeTo: string
 
   beforeEach(async () => {
     const fixture = await loadFixture(factoryFixture)
@@ -35,13 +36,14 @@ describe('VexchangeV2Factory', () => {
 
     expectedDefaultSwapFee = fixture.defaultSwapFee
     expectedDefaultPlatformFee = fixture.defaultPlatformFee
+    expectedPlatformFeeTo = fixture.platformFeeTo
   })
 
-  it('platformFeeTo, defaultSwapFee, defaultPlatformFee, defaultRecoverer, allPairsLength', async () => {
-    expect(await factory.platformFeeTo()).to.eq(AddressZero)
-    expect(await factory.defaultSwapFee()).to.eq(expectedDefaultSwapFee);
-    expect(await factory.defaultPlatformFee()).to.eq(expectedDefaultPlatformFee);
-    expect(await factory.defaultRecoverer()).to.eq(wallet.address);
+  it('platformFeeTo, defaultSwapFee, defaultPlatformFee, platformFeeTo, defaultRecoverer, allPairsLength', async () => {
+    expect(await factory.defaultSwapFee()).to.eq(expectedDefaultSwapFee)
+    expect(await factory.defaultPlatformFee()).to.eq(expectedDefaultPlatformFee)
+    expect(await factory.platformFeeTo()).to.eq(expectedPlatformFeeTo)
+    expect(await factory.defaultRecoverer()).to.eq(wallet.address)
     expect(await factory.allPairsLength()).to.eq(0)
   })
 
@@ -50,7 +52,14 @@ describe('VexchangeV2Factory', () => {
     const create2Address = getCreate2Address(factory.address, tokens, bytecode)
     await expect(factory.createPair(...tokens))
       .to.emit(factory, 'PairCreated')
-      .withArgs(TEST_ADDRESSES[0], TEST_ADDRESSES[1], create2Address, bigNumberify(1), expectedDefaultSwapFee, expectedDefaultPlatformFee)
+      .withArgs(
+        TEST_ADDRESSES[0],
+        TEST_ADDRESSES[1],
+        create2Address,
+        bigNumberify(1),
+        expectedDefaultSwapFee,
+        expectedDefaultPlatformFee
+      )
 
     await expect(factory.createPair(...tokens)).to.be.reverted // VexchangeV2: PAIR_EXISTS
     await expect(factory.createPair(...tokens.slice().reverse())).to.be.reverted // VexchangeV2: PAIR_EXISTS
@@ -71,12 +80,12 @@ describe('VexchangeV2Factory', () => {
 
   it('retreivePairInitCode', async () => {
     // Retrieve the VexchangeV2Pair init-code from the factory
-    const initCode: BigNumber =  await factory.getPairInitHash()
+    const initCode: BigNumber = await factory.getPairInitHash()
 
     // Expected init-code (hard coded value is used in dependent modules as a gas optimisation, so also verified here).
     // Note: changing the hard-coded expected init-code value implies you will need to also update the dependency.
     // See dependency @ uniswap-v2-periphery/contracts/libraries/VexchangeV2Library.sol
-    expect(initCode, "VexchangeV2Pair init-code").to.eq('0x7e79aabe2533ac4a6df68a11c9e5389d4c11e8bec064a048ef999b7912cbb168')
+    expect(initCode, 'VexchangeV2Pair init-code').to.eq('0x7e79aabe2533ac4a6df68a11c9e5389d4c11e8bec064a048ef999b7912cbb168')
   })
 
   it('createPair:reverse', async () => {
