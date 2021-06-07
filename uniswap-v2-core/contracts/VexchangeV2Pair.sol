@@ -15,10 +15,10 @@ contract VexchangeV2Pair is IVexchangeV2Pair, VexchangeV2ERC20 {
 
     uint public constant MINIMUM_LIQUIDITY = 10**3;
     bytes4 private constant SELECTOR = bytes4(keccak256(bytes('transfer(address,uint256)')));
-    // 10000000000000000000000000000000000000000000000000000000000000000000000000000
-    uint256 public constant SQUARED_ACCURACY = 10_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000;
-    // 100000000000000000000000000000000000000
-    uint256 public constant ACCURACY         = 100_000_000_000_000_000_000_000_000_000_000_000_000;
+    // Accuracy^2: 10_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000
+    uint256 public constant SQUARED_ACCURACY = 10e75;
+    // Accuracy: 100_000_000_000_000_000_000_000_000_000_000_000_000
+    uint256 public constant ACCURACY         = 10e37;
     uint256 public constant FEE_ACCURACY     = 10_000;
 
     uint public constant MAX_PLATFORM_FEE = 5000;   // 50.00%

@@ -23,7 +23,7 @@ library VexchangeV2Library {
                 keccak256(abi.encodePacked(token0, token1)),
 
                 // Updated hard-coded hash for current VexchangeV2Pair
-                hex'7e79aabe2533ac4a6df68a11c9e5389d4c11e8bec064a048ef999b7912cbb168'
+                hex'3d0a986941e663a930d3144919eab1aa0ccdfa43cc690c9ee4022fc1e09a3ef6'
             ))));
     }
 
