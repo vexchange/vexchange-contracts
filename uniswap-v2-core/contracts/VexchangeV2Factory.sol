@@ -25,6 +25,8 @@ contract VexchangeV2Factory is IVexchangeV2Factory, Ownable {
 
     constructor(uint _defaultSwapFee, uint _defaultPlatformFee, address _platformFeeTo, address _defaultRecoverer) public {
         require(_platformFeeTo != address(0), 'VexchangeV2: PLATFORMFEETO_ZERO_ADDRESS');
+        require(_defaultSwapFee >= MIN_SWAP_FEE && _defaultSwapFee <= MAX_SWAP_FEE, "VexchangeV2: INVALID_SWAP_FEE");
+        require(_defaultPlatformFee <= MAX_PLATFORM_FEE, "VexchangeV2: INVALID_PLATFORM_FEE");
         defaultSwapFee = _defaultSwapFee;
         defaultPlatformFee = _defaultPlatformFee;
         platformFeeTo = _platformFeeTo;
