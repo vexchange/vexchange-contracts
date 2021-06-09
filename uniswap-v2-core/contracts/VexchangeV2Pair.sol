@@ -133,6 +133,26 @@ contract VexchangeV2Pair is IVexchangeV2Pair, VexchangeV2ERC20 {
         emit Sync(reserve0, reserve1);
     }
 
+    /**
+     * _calcFee calculates the appropriate platform fee in terms of tokens that will be minted, based on the growth
+     * in sqrt(k), the amount of liquidity in the pool, and the set variable fee in basis points.
+     *
+     * This function implements the equation defined in the Uniswap V2 whitepaper for calculating platform fees, on
+     * which their fee calculation implementation is based. This is a refactored form of equation 6, on page 5 of the 
+     * Uniswap whitepaper; see https://uniswap.org/whitepaper.pdf for further details.
+     *
+     * The specific difference between the Uniswap V2 implementation and this fee calculation is the fee variable,
+     * which remains a variable with range 0-50% here, but is fixed at (1/6)% in Uniswap V2.
+     *
+     * The mathematical equation:
+     * If 'Fee' is the platform fee, and the previous and new values of the square-root of the invariant k, are 
+     * K1 and K2 respectively; this equation, in the form coded here can be expressed as:
+     *
+     *   _sharesToIssue = totalSupply * Fee * (1 - K1/K2) / ( 1 - Fee * (1 - K1/K2) )
+     *
+     * A reader of the whitepaper will note that this equation is not a literally the same as equation (6), however
+     * with some straight-forward algebraic manipulation they can be shown to be mathematically equivalent.
+     */
     function _calcFee(uint _sqrtNewK, uint _sqrtOldK, uint _platformFee, uint _circulatingShares) internal pure returns (uint _sharesToIssue) {
         // Assert newK & oldK        < uint112
         // Assert _platformFee       < FEE_ACCURACY

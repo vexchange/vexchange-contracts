@@ -85,7 +85,7 @@ describe('VexchangeV2Factory', () => {
     // Expected init-code (hard coded value is used in dependent modules as a gas optimisation, so also verified here).
     // Note: changing the hard-coded expected init-code value implies you will need to also update the dependency.
     // See dependency @ uniswap-v2-periphery/contracts/libraries/VexchangeV2Library.sol
-    expect(initCode, 'VexchangeV2Pair init-code').to.eq('0x3d0a986941e663a930d3144919eab1aa0ccdfa43cc690c9ee4022fc1e09a3ef6')
+    expect(initCode, 'VexchangeV2Pair init-code').to.eq('0x2cfecdc8e793e877c8e6209e4fd68df047f4492e883c85e3a5a03fddd29de302')
   })
 
   it('createPair:reverse', async () => {
