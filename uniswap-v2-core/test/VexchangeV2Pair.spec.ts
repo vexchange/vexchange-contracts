@@ -3,7 +3,7 @@ import {Contract, constants} from 'ethers'
 import { solidity, MockProvider, createFixtureLoader } from 'ethereum-waffle'
 import { BigNumber, bigNumberify, SupportedAlgorithms } from 'ethers/utils'
 
-import { expandTo18Decimals, mineBlock, encodePrice, MAX_UINT_256, MAX_UINT_128, MAX_UINT_112, bigNumberSqrt, closeTo } from './shared/utilities'
+import { expandTo18Decimals, mineBlock, encodePrice, MAX_UINT_256, MAX_UINT_128, MAX_UINT_112, bigNumberSqrt, closeTo, verifyGas } from './shared/utilities'
 import { pairFixture } from './shared/fixtures'
 import { AddressZero } from 'ethers/constants'
 
@@ -391,7 +391,7 @@ describe('VexchangeV2Pair', () => {
     // Gas price seems to be inconsistent for the swap; most likely due to test framework. (TBC)
     // Every ~ 1 in 4 runs will see the higher gas cost.
     expect(receipt.gasUsed).to.satisfy( function(gas: number) {
-      return ((gas==56403) || (gas==97219));
+      return verifyGas(gas, [56403,97219], "Swap gas cost");
     })
 
     const newToken0Balance = await token0.balanceOf(pair.address)
@@ -404,8 +404,8 @@ describe('VexchangeV2Pair', () => {
 
     // Gas price seems to be inconsistent for the swap; most likely due to test framework. (TBC)
     // Every ~ 1 in 10 runs will see the higher gas cost.
-    expect(burnReceipt.gasUsed, "Check burn op gas cost (expect 159865 or 119049)").to.satisfy( function(gas: number) {
-      return ((gas==159865) || (gas==119049));
+    expect(burnReceipt.gasUsed, "Check burn op gas cost").to.satisfy( function(gas: number) {
+      return verifyGas( gas, [159865, 119049], "Burn gas cost" );
     })
     
     // Expected fee @ 1/6 or 0.1667% is calculated at 249800449363715 which is a ~0.02% error off the original uniswap.
@@ -481,7 +481,7 @@ describe('VexchangeV2Pair', () => {
     expect( lScaledMultiplier, 'scaled-multiplier < 128bit' ).to.lte( MAX_UINT_128 )
 
     const lScaledTargetOwnership = lScaledMultiplier.mul( aPlatformFee ).div( FEE_ACCURACY )
-    expect( lScaledTargetOwnership, 'scaled-tTarget-ownership < 128bit' ).to.lte( MAX_UINT_128 )
+    expect( lScaledTargetOwnership, 'scaled-target-ownership < 128bit' ).to.lte( MAX_UINT_128 )
 
     const resultantFee = lScaledTargetOwnership.mul(lTotalSupply).div(ACCURACY.sub(lScaledTargetOwnership)); 
 
@@ -489,6 +489,135 @@ describe('VexchangeV2Pair', () => {
   } // calcPlatformFee
 
   /**
+   * calcPlatformFeeUniswap
+   * 
+   * This method implements the Uniswap whitepaper equation 5 explicitly, and using floating point
+   * (Javascript numbers) for cross-validation.
+   */
+  function calcPlatformFeeUniswap( aPlatformFee: BigNumber,
+    aToken0Balance: BigNumber, aToken1Balance: BigNumber,
+    aNewToken0Balance: BigNumber, aNewToken1Balance: BigNumber ) : number
+  {
+    // Calculate the total-supply as the geometric mean of the initial token balances.
+    const lTotalSupply  : number = Math.sqrt( aToken0Balance.toNumber() * aToken1Balance.toNumber() )
+
+    // Calculate the sqrt of invariants for the pool
+    const K1: number = Math.sqrt( aToken0Balance.toNumber() * aToken1Balance.toNumber() )
+    const K2: number = Math.sqrt( aNewToken0Balance.toNumber() * aNewToken1Balance.toNumber() )
+
+    // Calculate 1/fee, exit is fee is zero
+    if (aPlatformFee.eq(bigNumberify(0)) ) return 0;
+    const inverseFee : number = 10000 / aPlatformFee.toNumber();
+
+    // Implement whitepaper equation
+    const numerator : number = lTotalSupply * ( K2 - K1 );
+    const denominator : number = ( inverseFee - 1 ) * K2 + K1;
+    const sharesToMint: number = ( denominator == 0 ) ? 0 : (numerator / denominator);
+    return sharesToMint 
+  } // calcPlatformFeeUniswapAsNumber
+
+  /**
+   * ComparisonRecord for reporting comparison results via console.table()
+   */
+  class ComparisonRecord {
+    Fee : String = "-";
+    Initial0 : String = "-";
+    Initial1 : String = "-";
+    Final0 : String = "-";
+    Final1 : String = "-";
+    TotalSupply: String = "-";
+    VexchangeFee : String = "-";
+    UniswapFee: String = "-";
+    Delta : String = "-";
+    DeltaPct : String = "-";
+  }
+  var lComparisonReportData : ComparisonRecord[] = [];
+
+  const comparisonTestCases: BigNumber[][] = [
+    [    0,  10000,  10000,    20000,    20000 ], //< Zero plaform-fee.
+    [    5,  10000,  10000,    10000,    10000 ], //< Equivalent liquidity, so growth & zero fee: not technically possible from _mintFee.
+    [    5,  10000,   5000,    10000,     5000 ], //< Equivalent liquidity, so growth & zero fee: not technically possible from _mintFee.
+    [    5,  10000,   5000,     5000,    10000 ], //< Equivalent liquidity, so growth & zero fee: not technically possible from _mintFee.
+    [    5,   5000,  10000,    10000,     5000 ], //< Equivalent liquidity, so growth & zero fee: not technically possible from _mintFee.
+    [    5,  10000,  10000,    20000,    20000 ],
+    [   10,  10000,  10000,    20000,    20000 ],
+    [   25,  10000,  10000,    50000,    50000 ],
+    [   50,  10000,  10000,    20000,    20000 ],
+    [  100,  10000,  10000,    20000,    20000 ],
+    [  500,  10000,  10000,    20000,    20000 ],
+    [ 1000,  10000,  10000,    20000,    20000 ],
+    [ 1000, 100000, 100000,   160000,   160000 ],
+    [ 1000, 100000, 100000,   500000,   500000 ],
+    [ 1667,  10000,  10000,    20000,    20000 ],
+    [ 1667,  10000,  10000,    90000,    90000 ],
+    [ 1667,  10000,  10000,   200000,   200000 ],
+    [ 1667,  10000,  10000,  9900000,  9900000 ],
+    [ 2000,  10000,  10000,    20000,    20000 ],
+    [ 2500,  10000,  10000,    20000,    20000 ],
+    [ 2500,  10000,  10000,    15000,    10000 ],
+    [ 2500,  10000,  10000,    10000,    15000 ],
+    [ 2500,   5000,  20000,    10000,    15000 ],
+    [ 2500,  20000,   5000,    10000,    15000 ],
+    [ 2500,   5000,  10000,    10000,     5000 ], //< Equivalent liquidity, so growth & zero fee: not technically possible from _mintFee.
+    [ 2500,  10000,   5000,     5000,    10000 ], //< Equivalent liquidity, so growth & zero fee: not technically possible from _mintFee.
+    [ 2500,  10000,   5000,    20000,    10000 ],
+    [ 2500,  10000,  10000,    50000,    50000 ],
+    [ 2500,  20000,  20000,    60000,    60000 ],
+    [ 2500, 100000, 100000,   500000,   500000 ], 
+    [ 3000,  10000,  10000,    12000,    12000 ],
+    [ 3000,  10000,  10000,    10500,    10500 ],
+    [ 4500,  10000,  10000,    10200,    10200 ],
+    [ 5000,  10000,  10000,    50000,    50000 ],
+    [ 5000, 100000, 100000,   500000,   500000 ],
+    [ 5000, 100000, 100000,  1000000,  1000000 ],
+    [ 5000, 100000, 100000,  2000000,  2000000 ],
+    [ 4950,   1000,   1000, 99000000, 99000000 ],
+    [ 4950,   1000,   1000, 99000000, 99000000 ],
+  ].map(a => a.map(n => (bigNumberify(n))))
+  comparisonTestCases.forEach((platformFeeTestCase, i) => {
+    it(`compareCalcPlatformFee:${i}`, async () => {
+      const [platformFee, token0InitialBalance, token1InitialBalance, token0FinalBalance, token1FinalBalance] = platformFeeTestCase
+      const totalSupply  : BigNumber = bigNumberSqrt(token0InitialBalance.mul(token1InitialBalance))
+
+      // Calculate via the two alternate fee calculations
+      const lVexchangeFeeResult: BigNumber = calcPlatformFee( platformFee, token0InitialBalance, token1InitialBalance, token0FinalBalance, token1FinalBalance )
+      const lUniswapFeeResult: number = calcPlatformFeeUniswap( platformFee, token0InitialBalance, token1InitialBalance, token0FinalBalance, token1FinalBalance )
+
+      // Calculate variance
+      const lDelta : number = lUniswapFeeResult - lVexchangeFeeResult.toNumber();
+      const lDeltaPct : number = (lUniswapFeeResult == 0) ? 0 : (lDelta * 100 / lUniswapFeeResult);
+
+      // Validate that the Vexchange result is within 1 integer value in all cases.
+      expect( lDelta, 'Vexchange equation validation' ).to.satisfy(
+        function( valueToTest : number ) { return ( valueToTest >= -1 ) && ( valueToTest <= 1 ) } 
+      );
+
+      // Report for visual comarison
+      const lComparisonRecord: ComparisonRecord = { 
+        Fee: platformFee.toString(),
+        Initial0: token0InitialBalance.toString(),
+        Initial1: token1InitialBalance.toString(),
+        Final0: token0FinalBalance.toString(),
+        Final1: token1FinalBalance.toString(),
+        TotalSupply: totalSupply.toString(),
+        VexchangeFee: lVexchangeFeeResult.toString(),
+        UniswapFee: lUniswapFeeResult.toFixed(2),
+        
+        Delta: lDelta.toFixed(3),
+        DeltaPct: `${lDeltaPct.toFixed(3)} %`
+      }
+
+      lComparisonReportData.push( lComparisonRecord );
+    })
+  }) // compareCalcPlatformFee
+
+  // Log the data to console - generated by calcPlatformFeeTestCases; 
+  // Uncomment to log comparison data to console.
+  // it('compareCalcPlatformFeeReport', async () => {
+  //   console.table( lComparisonReportData );
+  // })
+
+ /**
    * Verify the calcPlatformFee in terms of straight-forward use-cases;
    * based on platformFee, initial balances & final balances.
    * 
@@ -609,9 +738,7 @@ describe('VexchangeV2Pair', () => {
     
         // Gas price seems to be inconsistent for the swap
         expect(swapReceipt.gasUsed, "swap gas fee").to.satisfy( function(gas: number) {
-          const result = ((gas==56403) || (gas==97155) || (gas==97219) || (gas==56339))
-          return result
-        })
+          return verifyGas( gas, [56339, 56403, 97155, 97219 ], "swap gas fee" ); })
     
         // Calculate the expected platform fee
         const token0PairBalanceAfterSwap = await token0.balanceOf(pair.address);
@@ -632,7 +759,7 @@ describe('VexchangeV2Pair', () => {
     
         // Check the (inconsistent) gas fee
         expect(burnReceipt.gasUsed, "burn gas fee").to.satisfy( 
-          function(gas: number) { return ((gas==169239) || (gas==128423)); })
+          function(gas: number) { return verifyGas( gas, [169239, 128423], "burn gas fee" ); })
     
         // Check that the fee receiver (account set to platformFeeTo) received the fees
         expect(await pair.balanceOf(other.address), "Fee receiver balance").to.eq( expectedPlatformFee )

@@ -12,6 +12,23 @@ export function expandTo18Decimals(n: number): BigNumber {
   return bigNumberify(n).mul(bigNumberify(10).pow(18))
 }
 
+/**
+ * verifyGas verify if gas parameter is valid, and if not will log the
+ * errant value to console (prefixed by aContext) and return false.
+ * @param gas value to test
+ * @param validGasValues array of expected valid gas values
+ * @param aContext Contextual log message in case of error
+ * @returns true if the passed in gas matches one of the expected values
+ */
+ export function verifyGas( gas: number, validGasValues: number[], aContext : String ) {
+  for (const idx in validGasValues) {
+    if (gas == validGasValues[idx]) return true;
+  }
+
+  console.log(`${aContext}; gas = ${gas}`)
+  return false
+}
+
 function getDomainSeparator(name: string, tokenAddress: string, chainId: number) {
   return keccak256(
     defaultAbiCoder.encode(

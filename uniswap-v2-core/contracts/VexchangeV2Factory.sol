@@ -80,8 +80,7 @@ contract VexchangeV2Factory is IVexchangeV2Factory, Ownable {
         defaultSwapFee = _swapFee;
     }
     
-    function defaultPlatformFeeOn() external view returns (bool _platformFeeOn)
-    {
+    function defaultPlatformFeeOn() external view returns (bool _platformFeeOn) {
         _platformFeeOn = defaultPlatformFee > 0;
     }
 

@@ -5,7 +5,7 @@ import { BigNumber, bigNumberify } from 'ethers/utils'
 import { solidity, MockProvider, createFixtureLoader } from 'ethereum-waffle'
 import { ecsign } from 'ethereumjs-util'
 
-import { expandTo18Decimals, getApprovalDigest, mineBlock, MINIMUM_LIQUIDITY } from './shared/utilities'
+import { expandTo18Decimals, getApprovalDigest, mineBlock, MINIMUM_LIQUIDITY, verifyGas } from './shared/utilities'
 import { v2Fixture } from './shared/fixtures'
 
 chai.use(solidity)
@@ -519,10 +519,10 @@ describe('VexchangeV2Router{01,02}', () => {
           const receipt = await tx.wait()
           expect(receipt.gasUsed).to.satisfy( function(gas: number) {
             if (routerVersion == RouterVersion.VexchangeV2Router01) {
-              return ((gas==131686))
+              return verifyGas(gas, [131686], "swapExactVETForTokens Router01");
             }
             else if (routerVersion == RouterVersion.VexchangeV2Router02) {
-              return ((gas==101709 || gas==131709))
+              return verifyGas(gas, [101709, 131709], "swapExactVETForTokens Router02");
             }
           })
         })

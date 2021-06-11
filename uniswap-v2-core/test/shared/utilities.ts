@@ -42,6 +42,23 @@ export function closeTo( valueToTest : BigNumber, valueExpected : BigNumber, all
 }
 
 /**
+ * verifyGas verify if gas parameter is valid, and if not will log the
+ * errant value to console (prefixed by aContext) and return false.
+ * @param gas value to test
+ * @param validGasValues array of expected valid gas values
+ * @param aContext Contextual log message in case of error
+ * @returns true if the passed in gas matches one of the expected values
+ */
+ export function verifyGas( gas: number, validGasValues: number[], aContext : String ) {
+  for (const idx in validGasValues) {
+    if (gas == validGasValues[idx]) return true;
+  }
+
+  console.log(`${aContext}; gas = ${gas}`)
+  return false
+}
+
+/**
  * Rudimentary implementation of BigNumber square-root mathematical operation.
  * (since the current BigNumber library is lacking)
  * 
