@@ -329,7 +329,7 @@ contract VexchangeV2Router02 is IVexchangeV2Router02 {
             (uint reserve0, uint reserve1,) = pair.getReserves();
             (uint reserveInput, uint reserveOutput) = input == token0 ? (reserve0, reserve1) : (reserve1, reserve0);
             amountInput = IERC20(input).balanceOf(address(pair)).sub(reserveInput);
-            amountOutput = VexchangeV2Library.getAmountOut(amountInput, reserveInput, reserveOutput);
+            amountOutput = VexchangeV2Library.getAmountOut(amountInput, reserveInput, reserveOutput, pair.swapFee());
             }
             (uint amount0Out, uint amount1Out) = input == token0 ? (uint(0), amountOutput) : (amountOutput, uint(0));
             address to = i < path.length - 2 ? VexchangeV2Library.pairFor(factory, output, path[i + 2]) : _to;
@@ -404,24 +404,24 @@ contract VexchangeV2Router02 is IVexchangeV2Router02 {
         return VexchangeV2Library.quote(amountA, reserveA, reserveB);
     }
 
-    function getAmountOut(uint amountIn, uint reserveIn, uint reserveOut)
+    function getAmountOut(uint amountIn, uint reserveIn, uint reserveOut, uint swapFee)
         public
         pure
         virtual
         override
         returns (uint amountOut)
     {
-        return VexchangeV2Library.getAmountOut(amountIn, reserveIn, reserveOut);
+        return VexchangeV2Library.getAmountOut(amountIn, reserveIn, reserveOut, swapFee);
     }
 
-    function getAmountIn(uint amountOut, uint reserveIn, uint reserveOut)
+    function getAmountIn(uint amountOut, uint reserveIn, uint reserveOut, uint swapFee)
         public
         pure
         virtual
         override
         returns (uint amountIn)
     {
-        return VexchangeV2Library.getAmountIn(amountOut, reserveIn, reserveOut);
+        return VexchangeV2Library.getAmountIn(amountOut, reserveIn, reserveOut, swapFee);
     }
 
     function getAmountsOut(uint amountIn, address[] memory path)

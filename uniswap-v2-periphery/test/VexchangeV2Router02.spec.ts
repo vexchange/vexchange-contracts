@@ -51,27 +51,27 @@ describe('VexchangeV2Router02', () => {
   })
 
   it('getAmountOut', async () => {
-    expect(await router.getAmountOut(bigNumberify(2), bigNumberify(100), bigNumberify(100))).to.eq(bigNumberify(1))
-    await expect(router.getAmountOut(bigNumberify(0), bigNumberify(100), bigNumberify(100))).to.be.revertedWith(
+    expect(await router.getAmountOut(bigNumberify(2), bigNumberify(100), bigNumberify(100), bigNumberify(30))).to.eq(bigNumberify(1))
+    await expect(router.getAmountOut(bigNumberify(0), bigNumberify(100), bigNumberify(100), bigNumberify(30))).to.be.revertedWith(
       'VexchangeV2Library: INSUFFICIENT_INPUT_AMOUNT'
     )
-    await expect(router.getAmountOut(bigNumberify(2), bigNumberify(0), bigNumberify(100))).to.be.revertedWith(
+    await expect(router.getAmountOut(bigNumberify(2), bigNumberify(0), bigNumberify(100), bigNumberify(30))).to.be.revertedWith(
       'VexchangeV2Library: INSUFFICIENT_LIQUIDITY'
     )
-    await expect(router.getAmountOut(bigNumberify(2), bigNumberify(100), bigNumberify(0))).to.be.revertedWith(
+    await expect(router.getAmountOut(bigNumberify(2), bigNumberify(100), bigNumberify(0), bigNumberify(30))).to.be.revertedWith(
       'VexchangeV2Library: INSUFFICIENT_LIQUIDITY'
     )
   })
 
   it('getAmountIn', async () => {
-    expect(await router.getAmountIn(bigNumberify(1), bigNumberify(100), bigNumberify(100))).to.eq(bigNumberify(2))
-    await expect(router.getAmountIn(bigNumberify(0), bigNumberify(100), bigNumberify(100))).to.be.revertedWith(
+    expect(await router.getAmountIn(bigNumberify(1), bigNumberify(100), bigNumberify(100), bigNumberify(30))).to.eq(bigNumberify(2))
+    await expect(router.getAmountIn(bigNumberify(0), bigNumberify(100), bigNumberify(100), bigNumberify(30))).to.be.revertedWith(
       'VexchangeV2Library: INSUFFICIENT_OUTPUT_AMOUNT'
     )
-    await expect(router.getAmountIn(bigNumberify(1), bigNumberify(0), bigNumberify(100))).to.be.revertedWith(
+    await expect(router.getAmountIn(bigNumberify(1), bigNumberify(0), bigNumberify(100), bigNumberify(30))).to.be.revertedWith(
       'VexchangeV2Library: INSUFFICIENT_LIQUIDITY'
     )
-    await expect(router.getAmountIn(bigNumberify(1), bigNumberify(100), bigNumberify(0))).to.be.revertedWith(
+    await expect(router.getAmountIn(bigNumberify(1), bigNumberify(100), bigNumberify(0), bigNumberify(30))).to.be.revertedWith(
       'VexchangeV2Library: INSUFFICIENT_LIQUIDITY'
     )
   })

@@ -195,8 +195,8 @@ describe('ExampleComputeLiquidityValue', () => {
       const [reserveA, reserveB] = await computeLiquidityValue.getReservesAfterArbitrage(
         token0.address,
         token1.address,
-        MaxUint256.div(1000),
-        MaxUint256.div(1000)
+        MaxUint256.div(10000),
+        MaxUint256.div(10000)
       )
       // diff of 30 bips
       expect(reserveA).to.eq('100120248075158403008')

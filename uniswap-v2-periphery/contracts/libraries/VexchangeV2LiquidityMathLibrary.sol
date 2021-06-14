@@ -13,12 +13,17 @@ import './VexchangeV2Library.sol';
 library VexchangeV2LiquidityMathLibrary {
     using SafeMath for uint256;
 
+    uint256 public constant ACCURACY         = 10e37;
+    uint256 public constant SQUARED_ACCURACY = 10e75;
+    uint256 public constant FEE_ACCURACY     = 10_000;    
+
     // computes the direction and magnitude of the profit-maximizing trade
     function computeProfitMaximizingTrade(
         uint256 truePriceTokenA,
         uint256 truePriceTokenB,
         uint256 reserveA,
-        uint256 reserveB
+        uint256 reserveB,
+        uint256 swapFee
     ) pure internal returns (bool aToB, uint256 amountIn) {
         aToB = FullMath.mulDiv(reserveA, truePriceTokenB, reserveB) < truePriceTokenA;
 
@@ -26,12 +31,12 @@ library VexchangeV2LiquidityMathLibrary {
 
         uint256 leftSide = Babylonian.sqrt(
             FullMath.mulDiv(
-                invariant.mul(1000),
+                invariant.mul(10000),
                 aToB ? truePriceTokenA : truePriceTokenB,
-                (aToB ? truePriceTokenB : truePriceTokenA).mul(997)
+                (aToB ? truePriceTokenB : truePriceTokenA).mul(10000 - swapFee) 
             )
         );
-        uint256 rightSide = (aToB ? reserveA.mul(1000) : reserveB.mul(1000)) / 997;
+        uint256 rightSide = (aToB ? reserveA.mul(10000) : reserveB.mul(10000)) / (10000 - swapFee);
 
         if (leftSide < rightSide) return (false, 0);
 
@@ -52,8 +57,10 @@ library VexchangeV2LiquidityMathLibrary {
 
         require(reserveA > 0 && reserveB > 0, 'VexchangeV2ArbitrageLibrary: ZERO_PAIR_RESERVES');
 
+        uint swapFee = VexchangeV2Library.getSwapFee(factory, tokenA, tokenB);
+
         // then compute how much to swap to arb to the true price
-        (bool aToB, uint256 amountIn) = computeProfitMaximizingTrade(truePriceTokenA, truePriceTokenB, reserveA, reserveB);
+        (bool aToB, uint256 amountIn) = computeProfitMaximizingTrade(truePriceTokenA, truePriceTokenB, reserveA, reserveB, swapFee);
 
         if (amountIn == 0) {
             return (reserveA, reserveB);
@@ -61,11 +68,11 @@ library VexchangeV2LiquidityMathLibrary {
 
         // now affect the trade to the reserves
         if (aToB) {
-            uint amountOut = VexchangeV2Library.getAmountOut(amountIn, reserveA, reserveB);
+            uint amountOut = VexchangeV2Library.getAmountOut(amountIn, reserveA, reserveB, swapFee);
             reserveA += amountIn;
             reserveB -= amountOut;
         } else {
-            uint amountOut = VexchangeV2Library.getAmountOut(amountIn, reserveB, reserveA);
+            uint amountOut = VexchangeV2Library.getAmountOut(amountIn, reserveB, reserveA, swapFee);
             reserveB += amountIn;
             reserveA -= amountOut;
         }
@@ -77,20 +84,20 @@ library VexchangeV2LiquidityMathLibrary {
         uint256 reservesB,
         uint256 totalSupply,
         uint256 liquidityAmount,
-        bool feeOn,
+        uint256 platformFee,
         uint kLast
     ) internal pure returns (uint256 tokenAAmount, uint256 tokenBAmount) {
-        if (feeOn && kLast > 0) {
+        if (platformFee > 0 && kLast > 0) {
             uint rootK = Babylonian.sqrt(reservesA.mul(reservesB));
             uint rootKLast = Babylonian.sqrt(kLast);
             if (rootK > rootKLast) {
-                uint numerator1 = totalSupply;
-                uint numerator2 = rootK.sub(rootKLast);
-                uint denominator = rootK.mul(5).add(rootKLast);
-                uint feeLiquidity = FullMath.mulDiv(numerator1, numerator2, denominator);
+                uint256 _scaledGrowth = rootK.mul(ACCURACY) / rootKLast;                         // ASSERT: < UINT256
+                uint256 _scaledMultiplier = ACCURACY.sub(SQUARED_ACCURACY / _scaledGrowth);          // ASSERT: < UINT128
+                uint256 _scaledTargetOwnership = _scaledMultiplier.mul(platformFee) / FEE_ACCURACY; // ASSERT: < UINT144 during maths, ends < UINT128
+                uint feeLiquidity = _scaledTargetOwnership.mul(totalSupply) / ACCURACY.sub(_scaledTargetOwnership); // ASSERT: _scaledTargetOwnership < ACCURACY
                 totalSupply = totalSupply.add(feeLiquidity);
             }
-        }
+        } 
         return (reservesA.mul(liquidityAmount) / totalSupply, reservesB.mul(liquidityAmount) / totalSupply);
     }
 
@@ -106,10 +113,10 @@ library VexchangeV2LiquidityMathLibrary {
         (uint256 reservesA, uint256 reservesB) = VexchangeV2Library.getReserves(factory, tokenA, tokenB);
         IVexchangeV2Pair pair = IVexchangeV2Pair(VexchangeV2Library.pairFor(factory, tokenA, tokenB));
 
-        bool feeOn = pair.platformFeeOn();
-        uint kLast = feeOn ? pair.kLast() : 0;
+        uint platformFee = pair.platformFee();
+        uint kLast = (platformFee > 0) ? pair.kLast() : 0;
         uint totalSupply = pair.totalSupply();
-        return computeLiquidityValue(reservesA, reservesB, totalSupply, liquidityAmount, feeOn, kLast);
+        return computeLiquidityValue(reservesA, reservesB, totalSupply, liquidityAmount, platformFee, kLast);
     }
 
     // given two tokens, tokenA and tokenB, and their "true price", i.e. the observed ratio of value of token A to token B,
@@ -126,8 +133,8 @@ library VexchangeV2LiquidityMathLibrary {
         uint256 tokenBAmount
     ) {        
         IVexchangeV2Pair pair = IVexchangeV2Pair(VexchangeV2Library.pairFor(factory, tokenA, tokenB));
-        bool feeOn = pair.platformFeeOn();
-        uint kLast = feeOn ? pair.kLast() : 0;
+        uint platformFee = pair.platformFee();
+        uint kLast = (platformFee > 0) ? pair.kLast() : 0;
         uint totalSupply = pair.totalSupply();
 
         // this also checks that totalSupply > 0
@@ -135,6 +142,6 @@ library VexchangeV2LiquidityMathLibrary {
 
         (uint reservesA, uint reservesB) = getReservesAfterArbitrage(factory, tokenA, tokenB, truePriceTokenA, truePriceTokenB);
 
-        return computeLiquidityValue(reservesA, reservesB, totalSupply, liquidityAmount, feeOn, kLast);
+        return computeLiquidityValue(reservesA, reservesB, totalSupply, liquidityAmount, platformFee, kLast);
     }
 }
