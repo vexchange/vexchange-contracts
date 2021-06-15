@@ -15,7 +15,7 @@ library VexchangeV2LiquidityMathLibrary {
 
     uint256 public constant ACCURACY         = 10e37;
     uint256 public constant SQUARED_ACCURACY = 10e75;
-    uint256 public constant FEE_ACCURACY     = 10_000;    
+    uint256 public constant FEE_ACCURACY     = 10_000;
 
     // computes the direction and magnitude of the profit-maximizing trade
     function computeProfitMaximizingTrade(
@@ -91,8 +91,8 @@ library VexchangeV2LiquidityMathLibrary {
             uint rootK = Babylonian.sqrt(reservesA.mul(reservesB));
             uint rootKLast = Babylonian.sqrt(kLast);
             if (rootK > rootKLast) {
-                uint256 _scaledGrowth = rootK.mul(ACCURACY) / rootKLast;                         // ASSERT: < UINT256
-                uint256 _scaledMultiplier = ACCURACY.sub(SQUARED_ACCURACY / _scaledGrowth);          // ASSERT: < UINT128
+                uint256 _scaledGrowth = rootK.mul(ACCURACY) / rootKLast;                            // ASSERT: < UINT256
+                uint256 _scaledMultiplier = ACCURACY.sub(SQUARED_ACCURACY / _scaledGrowth);         // ASSERT: < UINT128
                 uint256 _scaledTargetOwnership = _scaledMultiplier.mul(platformFee) / FEE_ACCURACY; // ASSERT: < UINT144 during maths, ends < UINT128
                 uint feeLiquidity = _scaledTargetOwnership.mul(totalSupply) / ACCURACY.sub(_scaledTargetOwnership); // ASSERT: _scaledTargetOwnership < ACCURACY
                 totalSupply = totalSupply.add(feeLiquidity);
