@@ -370,8 +370,8 @@ describe('VexchangeV2Router{01,02}', () => {
           const receipt = await tx.wait()
           expect(receipt.gasUsed).to.eq(
             {
-              [RouterVersion.VexchangeV2Router01]: 96880,
-              [RouterVersion.VexchangeV2Router02]: 96881
+              [RouterVersion.VexchangeV2Router01]: 99936,
+              [RouterVersion.VexchangeV2Router02]: 99958
             }[routerVersion as RouterVersion]
           )
         }).retries(3)
@@ -519,10 +519,10 @@ describe('VexchangeV2Router{01,02}', () => {
           const receipt = await tx.wait()
           expect(receipt.gasUsed).to.satisfy( function(gas: number) {
             if (routerVersion == RouterVersion.VexchangeV2Router01) {
-              return verifyGas(gas, [131686], "swapExactVETForTokens Router01");
+              return verifyGas(gas, [104707, 134707], "swapExactVETForTokens Router01");
             }
             else if (routerVersion == RouterVersion.VexchangeV2Router02) {
-              return verifyGas(gas, [101709, 131709], "swapExactVETForTokens Router02");
+              return verifyGas(gas, [104730, 134730], "swapExactVETForTokens Router02");
             }
           })
         })
