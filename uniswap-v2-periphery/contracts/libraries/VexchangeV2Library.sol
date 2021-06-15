@@ -28,8 +28,7 @@ library VexchangeV2Library {
     }
     
     function getSwapFee(address factory, address tokenA, address tokenB) internal view returns (uint swapFee) {
-        (address token0, address token1) = sortTokens(tokenA, tokenB);
-        swapFee = IVexchangeV2Pair(pairFor(factory, token0, token1)).swapFee();
+        swapFee = IVexchangeV2Pair(pairFor(factory, tokenA, tokenB)).swapFee();
     }
 
     // fetches and sorts the reserves for a pair
@@ -73,7 +72,8 @@ library VexchangeV2Library {
         for (uint i; i < path.length - 1; i++) {
             (uint reserveIn, uint reserveOut) = getReserves(factory, path[i], path[i + 1]);
             uint swapFee = getSwapFee(factory, path[i], path[i + 1]);
-            amounts[i + 1] = getAmountOut(amounts[i], reserveIn, reserveOut, swapFee);        }
+            amounts[i + 1] = getAmountOut(amounts[i], reserveIn, reserveOut, swapFee);        
+        }
     }
 
     // performs chained getAmountIn calculations on any number of pairs
@@ -84,6 +84,7 @@ library VexchangeV2Library {
         for (uint i = path.length - 1; i > 0; i--) {
             (uint reserveIn, uint reserveOut) = getReserves(factory, path[i - 1], path[i]);
             uint swapFee = getSwapFee(factory, path[i - 1], path[i]);
-            amounts[i - 1] = getAmountIn(amounts[i], reserveIn, reserveOut, swapFee);        }
+            amounts[i - 1] = getAmountIn(amounts[i], reserveIn, reserveOut, swapFee);        
+        }
     }
 }

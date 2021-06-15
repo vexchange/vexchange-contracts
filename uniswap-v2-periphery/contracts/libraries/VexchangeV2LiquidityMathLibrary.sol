@@ -88,16 +88,17 @@ library VexchangeV2LiquidityMathLibrary {
         uint kLast
     ) internal pure returns (uint256 tokenAAmount, uint256 tokenBAmount) {
         if (platformFee > 0 && kLast > 0) {
-            uint rootK = Babylonian.sqrt(reservesA.mul(reservesB));
-            uint rootKLast = Babylonian.sqrt(kLast);
-            if (rootK > rootKLast) {
-                uint256 _scaledGrowth = rootK.mul(ACCURACY) / rootKLast;                            // ASSERT: < UINT256
-                uint256 _scaledMultiplier = ACCURACY.sub(SQUARED_ACCURACY / _scaledGrowth);         // ASSERT: < UINT128
-                uint256 _scaledTargetOwnership = _scaledMultiplier.mul(platformFee) / FEE_ACCURACY; // ASSERT: < UINT144 during maths, ends < UINT128
-                uint feeLiquidity = _scaledTargetOwnership.mul(totalSupply) / ACCURACY.sub(_scaledTargetOwnership); // ASSERT: _scaledTargetOwnership < ACCURACY
+            uint sqrtNewK = Babylonian.sqrt(reservesA.mul(reservesB));
+            uint sqrtOldK = Babylonian.sqrt(kLast);
+            if (sqrtNewK > sqrtOldK) {
+                uint256 _scaledGrowth = sqrtNewK.mul(ACCURACY) / sqrtOldK;                            
+                uint256 _scaledMultiplier = ACCURACY.sub(SQUARED_ACCURACY / _scaledGrowth);         
+                uint256 _scaledTargetOwnership = _scaledMultiplier.mul(platformFee) / FEE_ACCURACY; 
+                
+                uint feeLiquidity = _scaledTargetOwnership.mul(totalSupply) / ACCURACY.sub(_scaledTargetOwnership); 
                 totalSupply = totalSupply.add(feeLiquidity);
             }
-        } 
+        }
         return (reservesA.mul(liquidityAmount) / totalSupply, reservesB.mul(liquidityAmount) / totalSupply);
     }
 

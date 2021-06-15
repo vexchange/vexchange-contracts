@@ -46,7 +46,8 @@ contract ExampleSwapToPrice {
             uint swapFee = IVexchangeV2Pair(VexchangeV2Library.pairFor(factory, tokenA, tokenB)).swapFee();
             (aToB, amountIn) = VexchangeV2LiquidityMathLibrary.computeProfitMaximizingTrade(
                 truePriceTokenA, truePriceTokenB,
-                reserveA, reserveB, swapFee
+                reserveA, reserveB, 
+                swapFee
             );
         }
 

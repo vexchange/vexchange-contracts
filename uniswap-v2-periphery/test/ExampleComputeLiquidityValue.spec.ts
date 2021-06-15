@@ -204,7 +204,7 @@ describe('ExampleComputeLiquidityValue', () => {
     })
   })
 
-  describe('#getLiquidityValue', () => {
+  describe('#getLiquidityValueAfterArbitrageToPrice', () => {
     describe('fee is off', () => {
       it('produces the correct value after arbing to 1:105', async () => {
         const [token0Amount, token1Amount] = await computeLiquidityValue.getLiquidityValueAfterArbitrageToPrice(
@@ -251,7 +251,7 @@ describe('ExampleComputeLiquidityValue', () => {
             100,
             expandTo18Decimals(5)
           )
-        ).to.eq('13869')
+        ).to.eq('13684')
       })
 
       it('gas higher price', async () => {
@@ -263,7 +263,7 @@ describe('ExampleComputeLiquidityValue', () => {
             105,
             expandTo18Decimals(5)
           )
-        ).to.eq('14656')
+        ).to.eq('14471')
       })
 
       it('gas lower price', async () => {
@@ -275,7 +275,7 @@ describe('ExampleComputeLiquidityValue', () => {
             95,
             expandTo18Decimals(5)
           )
-        ).to.eq('14701')
+        ).to.eq('14516')
       })
 
       describe('after a swap', () => {
@@ -383,7 +383,7 @@ describe('ExampleComputeLiquidityValue', () => {
             100,
             expandTo18Decimals(5)
           )
-        ).to.eq('17481')
+        ).to.eq('17296')
       })
 
       it('gas higher price', async () => {
@@ -395,7 +395,7 @@ describe('ExampleComputeLiquidityValue', () => {
             105,
             expandTo18Decimals(5)
           )
-        ).to.eq('19064')
+        ).to.eq('18879')
       })
 
       it('gas lower price', async () => {
@@ -407,7 +407,7 @@ describe('ExampleComputeLiquidityValue', () => {
             95,
             expandTo18Decimals(5)
           )
-        ).to.eq('18995')
+        ).to.eq('18810')
       })
 
       describe('after a swap', () => {
