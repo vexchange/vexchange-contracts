@@ -193,7 +193,7 @@ describe('ExampleSwapToPrice', () => {
       )
       const receipt = await tx.wait()
       expect(receipt.gasUsed).to.satisfy( function(gas: number) {
-        return verifyGas( gas, [114513, 149772], "Swap gas cost" )
+        return verifyGas( gas, [114513, 155329], "Swap gas cost" )
       }) // gas test is inconsistent
     })
   })

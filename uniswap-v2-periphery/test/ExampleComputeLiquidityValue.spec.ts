@@ -97,7 +97,7 @@ describe('ExampleComputeLiquidityValue', () => {
 
     describe('fee on', () => {
       beforeEach('turn on fee', async () => {
-        // Set platform fee to 0.1667%, approx. equivalent to uniswap-V2 (1/6)
+        // Set platform fee to 16.67%, approx. equivalent to uniswap-V2 (1/6)
         await factory.setPlatformFeeForPair( pair.address, 1667 );
       })
 
@@ -124,8 +124,8 @@ describe('ExampleComputeLiquidityValue', () => {
           token1.address,
           expandTo18Decimals(7)
         )
-        expect(token0Amount).to.eq('1399824934325735058')
-        expect(token1Amount).to.eq('35048195651620807684')
+        expect(token0Amount).to.eq('1399824899312600205')
+        expect(token1Amount).to.eq('35048194774977471355')
       })
     })
   })
@@ -324,7 +324,7 @@ describe('ExampleComputeLiquidityValue', () => {
 
     describe('fee is on', () => {
       beforeEach('turn on fee', async () => {
-        // Set platform fee to 0.1667%, approx. equivalent to uniswap-V2 (1/6)
+        // Set platform fee to 16.67%, approx. equivalent to uniswap-V2 (1/6)
         await factory.setPlatformFeeForPair( pair.address, 1667 );
       })
 
@@ -345,8 +345,8 @@ describe('ExampleComputeLiquidityValue', () => {
             105,
             expandTo18Decimals(5)
           )
-          expect(token0Amount).to.eq('488680839243189328') // slightly less than 5% of 10, or 0.5
-          expect(token1Amount).to.eq('51161037620273529068') // slightly more than 5% of 100, or 5
+          expect(token0Amount).to.eq('488680838688540313') // slightly less than 5% of 10, or 0.5
+          expect(token1Amount).to.eq('51161037562206142622') // slightly more than 5% of 100, or 5
         })
 
         it('produces the correct value after arbing to 1:95', async () => {
@@ -357,8 +357,8 @@ describe('ExampleComputeLiquidityValue', () => {
             95,
             expandTo18Decimals(5)
           )
-          expect(token0Amount).to.eq('512252817918759166') // slightly more than 5% of 10, or 0.5
-          expect(token1Amount).to.eq('48806945633721895174') // slightly less than 5% of 100, or 5
+          expect(token0Amount).to.eq('512252817305954073') // slightly more than 5% of 10, or 0.5
+          expect(token1Amount).to.eq('48806945575334427424') // slightly less than 5% of 100, or 5
         })
 
         it('produces correct value at the current price', async () => {
@@ -435,8 +435,8 @@ describe('ExampleComputeLiquidityValue', () => {
             expandTo18Decimals(5)
           )
 
-          expect(token0Amount).to.eq('999874953089810756')
-          expect(token1Amount).to.eq('25034425465443434060')
+          expect(token0Amount).to.eq('999874928080428718')
+          expect(token1Amount).to.eq('25034424839269622396')
         })
 
         it('shares after arbing back to 1:100', async () => {
@@ -448,8 +448,8 @@ describe('ExampleComputeLiquidityValue', () => {
             expandTo18Decimals(5)
           )
 
-          expect(token0Amount).to.eq('501002443792372662')
-          expect(token1Amount).to.eq('50024924521757597314')
+          expect(token0Amount).to.eq('501002418745423792')
+          expect(token1Amount).to.eq('50024922020828226126')
         })
       })
     })
