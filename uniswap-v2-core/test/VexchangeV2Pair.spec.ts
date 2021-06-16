@@ -408,7 +408,7 @@ describe('VexchangeV2Pair', () => {
       return verifyGas( gas, [159865, 119049], "Burn gas cost" );
     })
     
-    // Expected fee @ 1/6 or 0.1667% is calculated at 249800449363715 which is a ~0.02% error off the original uniswap.
+    // Expected fee @ 1/6 or 16.67% is calculated at 249800449363715 which is a ~0.02% error off the original uniswap.
     // (Original uniswap v2 equivalent ==> 249750499251388)
     const expectedPlatformFee: BigNumber = bigNumberify(249800449363715)
 
@@ -428,13 +428,13 @@ describe('VexchangeV2Pair', () => {
     const minInverseVariance: number = targetInverseVariance * 0.95;
     const maxInverseVariance: number = targetInverseVariance * 1.05;
 
-    // Compare 1/6 vexchangeV2 fee, using 0.1667 Vexchange Platform fee: run check to confirm ~ 0.02% variance.
+    // Compare 1/6 vexchangeV2 fee, using 1667 bp Vexchange Platform fee: run check to confirm ~ 0.02% variance.
     const token0ExpBalVexchangeV2: BigNumber = bigNumberify( '249501683697445' )
     const token0ExpBalVexchange: BigNumber = bigNumberify( '249551584034184' )
     const token0Variance: number = token0ExpBalVexchangeV2.div(token0ExpBalVexchange.sub(token0ExpBalVexchangeV2)).toNumber();
     expect(token0Variance, "token 0 variance from uniswap v2 fee" ).to.be.within(minInverseVariance, maxInverseVariance)
 
-    // Compare 1/6 vexchangeV2 fee, using 0.1667 Vexchange Platform fee: run check to confirm ~ 0.02% variance.
+    // Compare 1/6 vexchangeV2 fee, using 1667 bp Vexchange Platform fee: run check to confirm ~ 0.02% variance.
     const token1ExpBalVexchangeV2: BigNumber = bigNumberify( '250000187312969' )
     const token1ExpBalVexchange: BigNumber = bigNumberify( '250050187350431' )
     const token1Variance: number = token1ExpBalVexchangeV2.div(token1ExpBalVexchange.sub(token1ExpBalVexchangeV2)).toNumber();
