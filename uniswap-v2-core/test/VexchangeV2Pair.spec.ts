@@ -408,7 +408,7 @@ describe('VexchangeV2Pair', () => {
       return verifyGas( gas, [159865, 119049], "Burn gas cost" );
     })
     
-    // Expected fee @ 1/6 or 0.1667% is calculated at 249800449363715 which is a ~0.02% error off the original uniswap.
+    // Expected fee @ 1/6 or 16.67% is calculated at 249800449363715 which is a ~0.02% error off the original uniswap.
     // (Original uniswap v2 equivalent ==> 249750499251388)
     const expectedPlatformFee: BigNumber = bigNumberify(249800449363715)
 
@@ -428,13 +428,13 @@ describe('VexchangeV2Pair', () => {
     const minInverseVariance: number = targetInverseVariance * 0.95;
     const maxInverseVariance: number = targetInverseVariance * 1.05;
 
-    // Compare 1/6 vexchangeV2 fee, using 0.1667 Vexchange Platform fee: run check to confirm ~ 0.02% variance.
+    // Compare 1/6 vexchangeV2 fee, using 1667 bp Vexchange Platform fee: run check to confirm ~ 0.02% variance.
     const token0ExpBalVexchangeV2: BigNumber = bigNumberify( '249501683697445' )
     const token0ExpBalVexchange: BigNumber = bigNumberify( '249551584034184' )
     const token0Variance: number = token0ExpBalVexchangeV2.div(token0ExpBalVexchange.sub(token0ExpBalVexchangeV2)).toNumber();
     expect(token0Variance, "token 0 variance from uniswap v2 fee" ).to.be.within(minInverseVariance, maxInverseVariance)
 
-    // Compare 1/6 vexchangeV2 fee, using 0.1667 Vexchange Platform fee: run check to confirm ~ 0.02% variance.
+    // Compare 1/6 vexchangeV2 fee, using 1667 bp Vexchange Platform fee: run check to confirm ~ 0.02% variance.
     const token1ExpBalVexchangeV2: BigNumber = bigNumberify( '250000187312969' )
     const token1ExpBalVexchange: BigNumber = bigNumberify( '250050187350431' )
     const token1Variance: number = token1ExpBalVexchangeV2.div(token1ExpBalVexchange.sub(token1ExpBalVexchangeV2)).toNumber();
@@ -449,8 +449,34 @@ describe('VexchangeV2Pair', () => {
   /**
    * calcPlatformFee
    * 
-   * Note that this function is deliberately verbose.
+   * Note that this function is deliberately verbose, implementing the Pair contract's platform-fee calculation, with
+   * additional assertion validation.
    * 
+   * This function is used in further tests below, to verify correct operation of the fee calculations in  the contract transactions.
+   * 
+   * Test Strategy
+   * =============
+   *  - Rely on the mathematically proven fact that the implemented platformFee is mathematically equivalent to the Uniswap general 
+   *    equation for fees (for this equation, see whitepaper, equation 6);
+   *  - Implement the platformFee calculation in javascript, in order to use it to verify the contract transaction values;
+   *  - Prove the javascript implementation by pre-calculated and manually confirmed values;
+   *  - Use the javascript implementation to verify swap and burn transactions, verifying correct fees.
+   * 
+   * Details
+   * =======
+   * The javascript implementation of the contract's platform fee calculation is found in this function is a direct copy of the 
+   * contract implementation with additional assertions around assumptions made for the contract, but that are not included in 
+   * the contract to minimise gas cost.
+   * 
+   * Note that the function calcPlatformFeeUniswap() is a direct implementation of the Uniswap whitepaper equation 6, and implemented
+   * with floating point not integer arithmetic for additional cross-validation. compareCalcPlatformFee proves that the results of
+   * this equation are equivalent, assuming integer ( floor() ) rounding.
+   * 
+   * The tests calcPlatformFeeTestCases confirm that the calcPlatformFee function produce expected results over a range of values - 
+   * with pre calculated expected values.
+   * 
+   * The tests in platformFeeRange then iterate over a transaction involving a specific swap then burn, verifying final total supply and 
+   * balances are as expected, based on expected fees per the calcPlatformFee() function.
    */
   function calcPlatformFee( aPlatformFee: BigNumber,
                             aToken0Balance: BigNumber, aToken1Balance: BigNumber,

@@ -4,7 +4,7 @@ import { MaxUint256 } from 'ethers/constants'
 import { BigNumber, bigNumberify, defaultAbiCoder, formatEther } from 'ethers/utils'
 import { solidity, MockProvider, createFixtureLoader, deployContract } from 'ethereum-waffle'
 
-import { expandTo18Decimals } from './shared/utilities'
+import { expandTo18Decimals, verifyGas } from './shared/utilities'
 import { v2Fixture } from './shared/fixtures'
 
 import ExampleSwapToPrice from '../build/ExampleSwapToPrice.json'
@@ -193,7 +193,7 @@ describe('ExampleSwapToPrice', () => {
       )
       const receipt = await tx.wait()
       expect(receipt.gasUsed).to.satisfy( function(gas: number) {
-        return ((gas==108906  || gas==149722))
+        return verifyGas( gas, [114513, 155329], "Swap gas cost" )
       }) // gas test is inconsistent
     })
   })
