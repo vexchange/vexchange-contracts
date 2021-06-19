@@ -19,7 +19,7 @@ const token1Amount = expandTo18Decimals(10)
 
 describe('ExampleOracleSimple', () => {
   const provider = new MockProvider({
-    hardfork: 'constantinople',
+    hardfork: 'istanbul',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
     gasLimit: 9999999
   })

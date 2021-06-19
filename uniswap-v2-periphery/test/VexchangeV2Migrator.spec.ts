@@ -15,7 +15,7 @@ const overrides = {
 
 describe('VexchangeV2Migrator', () => {
   const provider = new MockProvider({
-    hardfork: 'constantinople',
+    hardfork: 'istanbul',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
     gasLimit: 9999999
   })

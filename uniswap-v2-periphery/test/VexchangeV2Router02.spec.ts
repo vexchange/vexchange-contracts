@@ -19,7 +19,7 @@ const overrides = {
 
 describe('VexchangeV2Router02', () => {
   const provider = new MockProvider({
-    hardfork: 'constantinople',
+    hardfork: 'istanbul',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
     gasLimit: 9999999
   })
@@ -123,7 +123,7 @@ describe('VexchangeV2Router02', () => {
 
 describe('fee-on-transfer tokens', () => {
   const provider = new MockProvider({
-    hardfork: 'constantinople',
+    hardfork: 'istanbul',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
     gasLimit: 9999999
   })
@@ -192,14 +192,15 @@ describe('fee-on-transfer tokens', () => {
     await addLiquidity(DTTAmount, VETAmount)
 
     const expectedLiquidity = expandTo18Decimals(2)
-
+    
+    const chainId = await pair.chainId()
     const nonce = await pair.nonces(wallet.address)
     const digest = await getApprovalDigest(
       pair,
       { owner: wallet.address, spender: router.address, value: expectedLiquidity.sub(MINIMUM_LIQUIDITY) },
       nonce,
       MaxUint256,
-      0x27
+      chainId
     )
     const { v, r, s } = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(wallet.privateKey.slice(2), 'hex'))
 
@@ -311,7 +312,7 @@ describe('fee-on-transfer tokens', () => {
 
 describe('fee-on-transfer tokens: reloaded', () => {
   const provider = new MockProvider({
-    hardfork: 'constantinople',
+    hardfork: 'istanbul',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
     gasLimit: 9999999
   })

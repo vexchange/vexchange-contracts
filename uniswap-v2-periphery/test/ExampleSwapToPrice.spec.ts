@@ -17,7 +17,7 @@ const overrides = {
 
 describe('ExampleSwapToPrice', () => {
   const provider = new MockProvider({
-    hardfork: 'constantinople',
+    hardfork: 'istanbul',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
     gasLimit: 9999999
   })
@@ -193,7 +193,7 @@ describe('ExampleSwapToPrice', () => {
       )
       const receipt = await tx.wait()
       expect(receipt.gasUsed).to.satisfy( function(gas: number) {
-        return verifyGas( gas, [114513, 155329], "Swap gas cost" )
+        return verifyGas( gas, [123489, 165505], "Swap gas cost" )
       }) // gas test is inconsistent
     })
   })

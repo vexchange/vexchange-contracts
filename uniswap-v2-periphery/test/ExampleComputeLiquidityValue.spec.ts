@@ -16,7 +16,7 @@ const overrides = {
 
 describe('ExampleComputeLiquidityValue', () => {
   const provider = new MockProvider({
-    hardfork: 'constantinople',
+    hardfork: 'istanbul',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
     gasLimit: 9999999
   })
@@ -251,7 +251,7 @@ describe('ExampleComputeLiquidityValue', () => {
             100,
             expandTo18Decimals(5)
           )
-        ).to.eq('13684')
+        ).to.eq('16084')
       })
 
       it('gas higher price', async () => {
@@ -263,7 +263,7 @@ describe('ExampleComputeLiquidityValue', () => {
             105,
             expandTo18Decimals(5)
           )
-        ).to.eq('14471')
+        ).to.eq('16871')
       })
 
       it('gas lower price', async () => {
@@ -275,7 +275,7 @@ describe('ExampleComputeLiquidityValue', () => {
             95,
             expandTo18Decimals(5)
           )
-        ).to.eq('14516')
+        ).to.eq('16916')
       })
 
       describe('after a swap', () => {
@@ -383,7 +383,7 @@ describe('ExampleComputeLiquidityValue', () => {
             100,
             expandTo18Decimals(5)
           )
-        ).to.eq('17296')
+        ).to.eq('20338')
       })
 
       it('gas higher price', async () => {
@@ -395,7 +395,7 @@ describe('ExampleComputeLiquidityValue', () => {
             105,
             expandTo18Decimals(5)
           )
-        ).to.eq('18879')
+        ).to.eq('21921')
       })
 
       it('gas lower price', async () => {
@@ -407,7 +407,7 @@ describe('ExampleComputeLiquidityValue', () => {
             95,
             expandTo18Decimals(5)
           )
-        ).to.eq('18810')
+        ).to.eq('21852')
       })
 
       describe('after a swap', () => {

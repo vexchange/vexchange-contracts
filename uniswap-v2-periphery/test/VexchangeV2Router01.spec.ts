@@ -22,7 +22,7 @@ enum RouterVersion {
 describe('VexchangeV2Router{01,02}', () => {
   for (const routerVersion of Object.keys(RouterVersion)) {
     const provider = new MockProvider({
-      hardfork: 'constantinople',
+      hardfork: 'istanbul',
       mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
       gasLimit: 9999999
     })
@@ -240,13 +240,14 @@ describe('VexchangeV2Router{01,02}', () => {
 
         const expectedLiquidity = expandTo18Decimals(2)
 
+        const chainId = await pair.chainId()
         const nonce = await pair.nonces(wallet.address)
         const digest = await getApprovalDigest(
           pair,
           { owner: wallet.address, spender: router.address, value: expectedLiquidity.sub(MINIMUM_LIQUIDITY) },
           nonce,
           MaxUint256,
-          0x27
+          chainId
         )
 
         const { v, r, s } = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(wallet.privateKey.slice(2), 'hex'))
@@ -277,13 +278,14 @@ describe('VexchangeV2Router{01,02}', () => {
 
         const expectedLiquidity = expandTo18Decimals(2)
 
+        const chainId = await pair.chainId()
         const nonce = await VVETPair.nonces(wallet.address)
         const digest = await getApprovalDigest(
           VVETPair,
           { owner: wallet.address, spender: router.address, value: expectedLiquidity.sub(MINIMUM_LIQUIDITY) },
           nonce,
           MaxUint256,
-          0x27
+          chainId
         )
 
         const { v, r, s } = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(wallet.privateKey.slice(2), 'hex'))
@@ -370,8 +372,8 @@ describe('VexchangeV2Router{01,02}', () => {
           const receipt = await tx.wait()
           expect(receipt.gasUsed).to.eq(
             {
-              [RouterVersion.VexchangeV2Router01]: 99751,
-              [RouterVersion.VexchangeV2Router02]: 99773
+              [RouterVersion.VexchangeV2Router01]: 106943,
+              [RouterVersion.VexchangeV2Router02]: 106965
             }[routerVersion as RouterVersion]
           )
         }).retries(3)
@@ -519,10 +521,10 @@ describe('VexchangeV2Router{01,02}', () => {
           const receipt = await tx.wait()
           expect(receipt.gasUsed).to.satisfy( function(gas: number) {
             if (routerVersion == RouterVersion.VexchangeV2Router01) {
-              return verifyGas(gas, [104522, 134522], "swapExactVETForTokens Router01");
+              return verifyGas(gas, [113826, 143826], "swapExactVETForTokens Router01");
             }
             else if (routerVersion == RouterVersion.VexchangeV2Router02) {
-              return verifyGas(gas, [104545, 134545], "swapExactVETForTokens Router02");
+              return verifyGas(gas, [113849, 143849], "swapExactVETForTokens Router02");
             }
           })
         })
