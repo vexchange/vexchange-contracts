@@ -17,9 +17,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” 
 Specific tweaks:
 - Change variable names of LP token `symbol` and `name`.
 - `CREATE2` hash. 
-- `chainId()` OPCODE call replaced with hard-coded value (0x27 or 0x4a)
-- Compiler option changed to `constantinople`
 
 Before deploy:
- - Set desired chainTag 0x27 for testnet, 0x4a for mainnet. Default is testnet.
  - Check CREATE2 hashes using check_create2 script
