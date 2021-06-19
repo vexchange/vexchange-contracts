@@ -18,7 +18,7 @@ const TEST_ADDRESSES: [string, string] = [
 
 describe('VexchangeV2Factory', () => {
   const provider = new MockProvider({
-    hardfork: 'constantinople',
+    hardfork: 'istanbul',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
     gasLimit: 9999999
   })
@@ -85,7 +85,7 @@ describe('VexchangeV2Factory', () => {
     // Expected init-code (hard coded value is used in dependent modules as a gas optimisation, so also verified here).
     // Note: changing the hard-coded expected init-code value implies you will need to also update the dependency.
     // See dependency @ uniswap-v2-periphery/contracts/libraries/VexchangeV2Library.sol
-    expect(initCode, 'VexchangeV2Pair init-code').to.eq('0x44d7f7cd5dedd2b5caa1510508a9b0aa29ba9a209173e464d90ccc2fdb3ffcdc')
+    expect(initCode, 'VexchangeV2Pair init-code').to.eq('0x597842963dd96a7950f4a0e1fc043055599d6e4e7154f8190d1ff640509e5900')
   })
 
   it('createPair:reverse', async () => {
@@ -97,7 +97,7 @@ describe('VexchangeV2Factory', () => {
     const receipt = await tx.wait()
 
     // Hard-coded gas cost based on current extension
-    expect(receipt.gasUsed).to.eq(3005567)
+    expect(receipt.gasUsed).to.eq(3018852)
   })
 
   it('setPlatformFeeTo', async () => {

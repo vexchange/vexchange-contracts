@@ -17,7 +17,7 @@ const overrides = {
 
 describe('VexchangeV2Pair', () => {
   const provider = new MockProvider({
-    hardfork: 'constantinople',
+    hardfork: 'istanbul',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
     gasLimit: 9999999
   })
@@ -188,7 +188,7 @@ describe('VexchangeV2Pair', () => {
     const receipt = await tx.wait()
 
     // Hard-coded gas cost based on current extension
-    expect(receipt.gasUsed).to.eq(67219)
+    expect(receipt.gasUsed).to.eq(75059)
   })
 
   it('burn', async () => {
@@ -344,7 +344,7 @@ describe('VexchangeV2Pair', () => {
 
     // Gas price seems to be inconsistent for the swap
     expect(receipt.gasUsed).to.satisfy( function(gas: number) {
-      return ((gas==56403) || (gas==97219));
+      return verifyGas( gas, [63043, 97219, 105059], "platformFee off swap gas" );
     })
 
     // Drain the liquidity to verify no fee has been extracted on exit
@@ -391,7 +391,7 @@ describe('VexchangeV2Pair', () => {
     // Gas price seems to be inconsistent for the swap; most likely due to test framework. (TBC)
     // Every ~ 1 in 4 runs will see the higher gas cost.
     expect(receipt.gasUsed).to.satisfy( function(gas: number) {
-      return verifyGas(gas, [56403,97219], "Swap gas cost");
+      return verifyGas(gas, [63043, 105059], "Swap gas cost");
     })
 
     const newToken0Balance = await token0.balanceOf(pair.address)
@@ -405,10 +405,10 @@ describe('VexchangeV2Pair', () => {
     // Gas price seems to be inconsistent for the swap; most likely due to test framework. (TBC)
     // Every ~ 1 in 10 runs will see the higher gas cost.
     expect(burnReceipt.gasUsed, "Check burn op gas cost").to.satisfy( function(gas: number) {
-      return verifyGas( gas, [159865, 119049], "Burn gas cost" );
+      return verifyGas( gas, [135736,177752], "Burn gas cost" );
     })
     
-    // Expected fee @ 1/6 or 16.67% is calculated at 249800449363715 which is a ~0.02% error off the original uniswap.
+    // Expected fee @ 1/6 or 0.1667% is calculated at 249800449363715 which is a ~0.02% error off the original uniswap.
     // (Original uniswap v2 equivalent ==> 249750499251388)
     const expectedPlatformFee: BigNumber = bigNumberify(249800449363715)
 
@@ -428,13 +428,13 @@ describe('VexchangeV2Pair', () => {
     const minInverseVariance: number = targetInverseVariance * 0.95;
     const maxInverseVariance: number = targetInverseVariance * 1.05;
 
-    // Compare 1/6 vexchangeV2 fee, using 1667 bp Vexchange Platform fee: run check to confirm ~ 0.02% variance.
+    // Compare 1/6 vexchangeV2 fee, using 0.1667 Vexchange Platform fee: run check to confirm ~ 0.02% variance.
     const token0ExpBalVexchangeV2: BigNumber = bigNumberify( '249501683697445' )
     const token0ExpBalVexchange: BigNumber = bigNumberify( '249551584034184' )
     const token0Variance: number = token0ExpBalVexchangeV2.div(token0ExpBalVexchange.sub(token0ExpBalVexchangeV2)).toNumber();
     expect(token0Variance, "token 0 variance from uniswap v2 fee" ).to.be.within(minInverseVariance, maxInverseVariance)
 
-    // Compare 1/6 vexchangeV2 fee, using 1667 bp Vexchange Platform fee: run check to confirm ~ 0.02% variance.
+    // Compare 1/6 vexchangeV2 fee, using 0.1667 Vexchange Platform fee: run check to confirm ~ 0.02% variance.
     const token1ExpBalVexchangeV2: BigNumber = bigNumberify( '250000187312969' )
     const token1ExpBalVexchange: BigNumber = bigNumberify( '250050187350431' )
     const token1Variance: number = token1ExpBalVexchangeV2.div(token1ExpBalVexchange.sub(token1ExpBalVexchangeV2)).toNumber();
@@ -764,7 +764,7 @@ describe('VexchangeV2Pair', () => {
     
         // Gas price seems to be inconsistent for the swap
         expect(swapReceipt.gasUsed, "swap gas fee").to.satisfy( function(gas: number) {
-          return verifyGas( gas, [56339, 56403, 97155, 97219 ], "swap gas fee" ); })
+          return verifyGas( gas, [63031, 63043, 105047, 105059], "swap gas fee" ); })
     
         // Calculate the expected platform fee
         const token0PairBalanceAfterSwap = await token0.balanceOf(pair.address);
@@ -785,7 +785,7 @@ describe('VexchangeV2Pair', () => {
     
         // Check the (inconsistent) gas fee
         expect(burnReceipt.gasUsed, "burn gas fee").to.satisfy( 
-          function(gas: number) { return verifyGas( gas, [169239, 128423], "burn gas fee" ); })
+          function(gas: number) { return verifyGas( gas, [145110, 187126], "burn gas fee" ); })
     
         // Check that the fee receiver (account set to platformFeeTo) received the fees
         expect(await pair.balanceOf(other.address), "Fee receiver balance").to.eq( expectedPlatformFee )

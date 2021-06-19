@@ -1,5 +1,5 @@
 import chai, { expect } from 'chai'
-import { Contract } from 'ethers'
+import { Contract, ethers } from 'ethers'
 import { MaxUint256 } from 'ethers/constants'
 import { bigNumberify, hexlify, keccak256, defaultAbiCoder, toUtf8Bytes } from 'ethers/utils'
 import { solidity, MockProvider, deployContract } from 'ethereum-waffle'
@@ -8,6 +8,7 @@ import { ecsign } from 'ethereumjs-util'
 import { expandTo18Decimals, getApprovalDigest } from './shared/utilities'
 
 import ERC20 from '../build/ERC20.json'
+import { Web3Provider } from 'ethers/providers'
 
 chai.use(solidity)
 
@@ -16,7 +17,7 @@ const TEST_AMOUNT = expandTo18Decimals(10)
 
 describe('VexchangeV2ERC20', () => {
   const provider = new MockProvider({
-    hardfork: 'constantinople',
+    hardfork: 'istanbul',
     mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
     gasLimit: 9999999
   })
@@ -29,12 +30,13 @@ describe('VexchangeV2ERC20', () => {
 
   it('name, symbol, decimals, totalSupply, balanceOf, DOMAIN_SEPARATOR, PERMIT_TYPEHASH', async () => {
     const name = await token.name()
+    const chainId = await token.chainId()
     expect(name).to.eq('Vexchange V2')
     expect(await token.symbol()).to.eq('VEX-V2')
     expect(await token.decimals()).to.eq(18)
     expect(await token.totalSupply()).to.eq(TOTAL_SUPPLY)
     expect(await token.balanceOf(wallet.address)).to.eq(TOTAL_SUPPLY)
-    expect(await token.DOMAIN_SEPARATOR()).to.eq(
+    expect(await token.DOMAIN_SEPARATOR(), "DOMAIN_SEPARATOR").to.eq(
       keccak256(
         defaultAbiCoder.encode(
           ['bytes32', 'bytes32', 'bytes32', 'uint256', 'address'],
@@ -44,13 +46,13 @@ describe('VexchangeV2ERC20', () => {
             ),
             keccak256(toUtf8Bytes(name)),
             keccak256(toUtf8Bytes('1')),
-            0x27,
+            chainId,
             token.address
           ]
         )
       )
     )
-    expect(await token.PERMIT_TYPEHASH()).to.eq(
+    expect(await token.PERMIT_TYPEHASH(), "PERMIT_TYPEHASH").to.eq(
       keccak256(toUtf8Bytes('Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)'))
     )
   })
@@ -96,6 +98,7 @@ describe('VexchangeV2ERC20', () => {
   })
 
   it('permit', async () => {
+    const chainId = await token.chainId()
     const nonce = await token.nonces(wallet.address)
     const deadline = MaxUint256
     const digest = await getApprovalDigest(
@@ -103,15 +106,15 @@ describe('VexchangeV2ERC20', () => {
       { owner: wallet.address, spender: other.address, value: TEST_AMOUNT },
       nonce,
       deadline,
-      0x27
+      chainId
     )
 
     const { v, r, s } = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(wallet.privateKey.slice(2), 'hex'))
 
-    await expect(token.permit(wallet.address, other.address, TEST_AMOUNT, deadline, v, hexlify(r), hexlify(s)))
+    await expect(token.permit(wallet.address, other.address, TEST_AMOUNT, deadline, v, hexlify(r), hexlify(s)), "permit call")
       .to.emit(token, 'Approval')
       .withArgs(wallet.address, other.address, TEST_AMOUNT)
-    expect(await token.allowance(wallet.address, other.address)).to.eq(TEST_AMOUNT)
-    expect(await token.nonces(wallet.address)).to.eq(bigNumberify(1))
+    expect(await token.allowance(wallet.address, other.address), "allowance").to.eq(TEST_AMOUNT)
+    expect(await token.nonces(wallet.address), "nonces").to.eq(bigNumberify(1))
   })
 })

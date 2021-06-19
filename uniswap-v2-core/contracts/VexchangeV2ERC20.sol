@@ -24,7 +24,7 @@ contract VexchangeV2ERC20 is IVexchangeV2ERC20 {
     constructor() public {
         uint chainId;
         assembly {
-            chainId := 0x27
+            chainId := chainid
         }
         DOMAIN_SEPARATOR = keccak256(
             abi.encode(
@@ -35,6 +35,15 @@ contract VexchangeV2ERC20 is IVexchangeV2ERC20 {
                 address(this)
             )
         );
+    }
+
+    // Convenience access method for test-harness
+    function chainId() external pure returns (uint256) {
+        uint _chainId;
+        assembly {
+            _chainId := chainid
+        }
+        return _chainId;
     }
 
     function _mint(address to, uint value) internal {
