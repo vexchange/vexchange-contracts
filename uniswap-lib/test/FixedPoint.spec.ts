@@ -15,7 +15,7 @@ const Q112 = BigNumber.from(2).pow(112)
 describe('FixedPoint', () => {
   const provider = new MockProvider({
     ganacheOptions: {
-      hardfork: 'constantinople',
+      hardfork: 'istanbul',
       mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
       gasLimit: 9999999,
     },

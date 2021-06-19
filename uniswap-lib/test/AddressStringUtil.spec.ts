@@ -15,7 +15,7 @@ const example = '0xC257274276a4E539741Ca11b590B9447B26A8051'
 describe('AddressStringUtil', () => {
   const provider = new MockProvider({
     ganacheOptions: {
-      hardfork: 'constantinople',
+      hardfork: 'istanbul',
       mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
       gasLimit: 9999999,
     },

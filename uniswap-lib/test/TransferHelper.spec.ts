@@ -16,7 +16,7 @@ const overrides = {
 describe('TransferHelper', () => {
   const provider = new MockProvider({
     ganacheOptions: {
-      hardfork: 'constantinople',
+      hardfork: 'istanbul',
       mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
       gasLimit: 9999999,
     },
