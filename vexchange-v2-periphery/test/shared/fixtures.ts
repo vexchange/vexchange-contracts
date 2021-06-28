@@ -4,8 +4,8 @@ import { deployContract } from 'ethereum-waffle'
 
 import { expandTo18Decimals } from './utilities'
 
-import VexchangeV2Factory from '../../../uniswap-v2-core/build/VexchangeV2Factory.json'
-import IVexchangeV2Pair from '../../../uniswap-v2-core/build/IVexchangeV2Pair.json'
+import VexchangeV2Factory from '../../../vexchange-v2-core/build/VexchangeV2Factory.json'
+import IVexchangeV2Pair from '../../../vexchange-v2-core/build/IVexchangeV2Pair.json'
 
 import ERC20 from '../../build/ERC20.json'
 import VVET9 from '../../build/VVET9.json'
@@ -50,8 +50,8 @@ export async function v2Fixture(provider: Web3Provider, [wallet]: Wallet[]): Pro
   await factoryV1.initializeFactory((await deployContract(wallet, VexchangeV1Exchange, [])).address)
 
   // deploy V2
-  const defaultSwapFee = 30    // Align swapFee with uniswap-V2 original fee
-  const defaultPlatformFee = 0 // set platform to zero, equivalent to fee-off in uniswap-V2.
+  const defaultSwapFee = 30    // Align swapFee with uniswap-v2 original fee
+  const defaultPlatformFee = 0 // set platform to zero, equivalent to fee-off in uniswap-v2.
   const platformFeeTo = '0x3000000000000000000000000000000000000000'
   const factoryV2 = await deployContract(wallet, VexchangeV2Factory, [defaultSwapFee, defaultPlatformFee, platformFeeTo, wallet.address], overrides)
 

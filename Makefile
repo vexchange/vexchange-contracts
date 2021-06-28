@@ -12,21 +12,21 @@ all: install-deps test
 
 # Update all dependencies
 install-deps:
-	cd uniswap-lib && npm ci
-	cd uniswap-v2-core && npm ci
-	cd uniswap-v2-periphery && npm ci
+	cd vexchange-lib && npm ci
+	cd vexchange-v2-core && npm ci
+	cd vexchange-v2-periphery && npm ci
 
 # Compile contracts
 compile:
-	cd uniswap-lib && npm run compile
-	cd uniswap-v2-core && npm run compile
-	cd uniswap-v2-periphery && npm run compile
+	cd vexchange-lib && npm run compile
+	cd vexchange-v2-core && npm run compile
+	cd vexchange-v2-periphery && npm run compile
 
 # Update dependencies and compile
 build: install-deps compile
 
 # Execute test suite
 test: compile
-	cd uniswap-lib && npm run test
-	cd uniswap-v2-core && npm run test
-	cd uniswap-v2-periphery && npm run test
+	cd vexchange-lib && npm run test
+	cd vexchange-v2-core && npm run test
+	cd vexchange-v2-periphery && npm run test

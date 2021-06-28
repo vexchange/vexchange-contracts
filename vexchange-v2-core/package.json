@@ -1,18 +1,14 @@
 {
-  "name": "@uniswap/v2-core",
+  "name": "@vexchange/v2-core",
   "description": "🎛 Core contracts for the VexchangeV2 protocol",
   "version": "1.0.1",
-  "homepage": "https://uniswap.org",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Uniswap/uniswap-v2-core"
-  },
+  "homepage": "https://vexchange.io",
   "keywords": [
-    "uniswap",
-    "ethereum",
+    "vexchange",
+    "vechain",
     "v2",
     "core",
-    "uniswap-v2"
+    "vexchange-v2"
   ],
   "files": [
     "contracts",

@@ -1,23 +1,15 @@
 {
-  "name": "@uniswap/v2-periphery",
+  "name": "@vexchange/v2-periphery",
   "version": "1.1.0-beta.0",
   "description": "🎚 Peripheral smart contracts for interacting with Vexchange V2",
   "engines": {
     "node": ">=10"
   },
-  "homepage": "https://uniswap.org",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Uniswap/uniswap-v2-periphery"
-  },
+  "homepage": "https://vexchange.io",
   "files": [
     "build",
     "contracts"
   ],
-  "dependencies": {
-    "@uniswap/lib": "4.0.1-alpha",
-    "@uniswap/v2-core": "1.0.0"
-  },
   "devDependencies": {
     "@types/chai": "^4.2.6",
     "@types/mocha": "^5.2.7",
